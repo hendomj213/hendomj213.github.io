@@ -17,7 +17,6 @@
 
       <div class="header-right">
         <div class="header-actions">
-          <button class="share-mini" onclick="downloadVCard()">Add to Contacts</button>
           <button class="share-mini" onclick="openShareModal()">Share Profile</button>
         </div>
 
@@ -27,7 +26,12 @@
       </div>
     </div>
 
-    <div class="name" id="name"></div>
+    <div class="name-row">
+      <div class="name" id="name"></div>
+      <button class="share-mini" onclick="downloadVCard()" aria-label="Add to contacts">
+        +
+      </button>
+    </div>
     <div class="title" id="title"></div>
     <div class="company" id="company"></div>
 
