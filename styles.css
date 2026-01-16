@@ -202,7 +202,7 @@ body {
   color: var(--text-main);
   background: rgba(255,255,255,0.04);
   font-size: 0.95rem;
-  transition: background 0.2s ease, transform 0.15s ease;
+  transition: transform 0.15s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -221,8 +221,6 @@ body {
   transform: scale(0.98);
 }
 
-/* CTA */
-
 .cta-btn {
   margin-top: 20px;
   width: 100%;
@@ -234,17 +232,14 @@ body {
   background: linear-gradient(135deg, var(--accent), #7dd3fc);
   color: #ffffff;
   cursor: pointer;
-  transition:
-    background 4s ease;
+  transition: box-shadow 0.25s ease, transform 0.15s ease;
 }
 
 .cta-btn:hover {
   transform: scale(1.05);
-  background: linear-gradient(315deg, var(--accent), #7dd3fc);
+  box-shadow: 0 10px 30px rgba(125, 211, 252, 0.35);
   z-index: 1;
 }
-
-/* Socials */
 
 .socials-wrapper {
   margin-top: 26px;
