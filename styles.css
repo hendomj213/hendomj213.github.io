@@ -235,7 +235,6 @@ body {
   color: #ffffff;
   cursor: pointer;
   transition:
-    transform 0.25s ease,
     background 1s ease;
 }
 
