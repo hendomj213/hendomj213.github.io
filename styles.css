@@ -235,7 +235,7 @@ body {
   color: #ffffff;
   cursor: pointer;
   transition:
-    background 1s ease;
+    background 4s ease;
 }
 
 .cta-btn:hover {
