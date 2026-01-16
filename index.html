@@ -2,36 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mason Henderson – Contact Card</title>
-
-  <!-- External CSS -->
+  <title>Contact Card</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
   <div class="card">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="photo">PHOTO</div>
+
+      <div class="header-right">
+        <button class="share-mini" onclick="shareProfile()">Share Profile</button>
+        <div class="logo">LOGO</div>
+      </div>
+    </div>
+
+    <!-- Identity -->
     <div class="name" id="name"></div>
     <div class="title" id="title"></div>
     <div class="company" id="company"></div>
 
+    <!-- Contact -->
     <div class="section">
-      <div class="label">Contact</div>
       <a class="item" id="email"></a>
       <a class="item" id="phone"></a>
       <a class="item" id="website"></a>
     </div>
 
-    <div class="section">
-      <div class="label">Social</div>
-      <a class="item" id="linkedin"></a>
-      <a class="item" id="twitter"></a>
-      <a class="item" id="github"></a>
+    <!-- CTA -->
+    <button class="cta-btn">
+      Book a Calendar Meeting
+    </button>
+
+    <!-- Socials -->
+    <div class="socials-wrapper">
+      <div class="socials-label">
+        <span></span>
+        socials
+        <span></span>
+      </div>
+
+      <div class="social-icons">
+        <a class="social-icon" id="icon-linkedin">ICON</a>
+        <a class="social-icon" id="icon-twitter">ICON</a>
+        <a class="social-icon" id="icon-github">ICON</a>
+        <a class="social-icon" id="icon-extra">ICON</a>
+      </div>
     </div>
 
-    <button class="share-btn" onclick="shareProfile()">
-      Click to Share
-    </button>
   </div>
 
   <script>
@@ -51,26 +72,21 @@
     document.getElementById("title").textContent = profile.title;
     document.getElementById("company").textContent = profile.company;
 
-    document.getElementById("email").href = profile.email;
-    document.getElementById("email").textContent = profile.email.replace("mailto:", "");
+    email.href = profile.email;
+    email.textContent = profile.email.replace("mailto:", "");
 
-    document.getElementById("phone").href = profile.phone;
-    document.getElementById("phone").textContent = profile.phone.replace("tel:", "");
+    phone.href = profile.phone;
+    phone.textContent = profile.phone.replace("tel:", "");
 
-    document.getElementById("website").href = profile.website;
-    document.getElementById("website").textContent = profile.website;
+    website.href = profile.website;
+    website.textContent = profile.website;
 
-    document.getElementById("linkedin").href = profile.linkedin;
-    document.getElementById("linkedin").textContent = "LinkedIn";
-
-    document.getElementById("twitter").href = profile.twitter;
-    document.getElementById("twitter").textContent = "Twitter / X";
-
-    document.getElementById("github").href = profile.github;
-    document.getElementById("github").textContent = "GitHub";
+    document.getElementById("icon-linkedin").href = profile.linkedin;
+    document.getElementById("icon-twitter").href = profile.twitter;
+    document.getElementById("icon-github").href = profile.github;
 
     function shareProfile() {
-      const shareText = `${profile.name}
+      const text = `${profile.name}
 ${profile.title}
 ${profile.company}
 
@@ -81,12 +97,12 @@ Website: ${profile.website}`;
       if (navigator.share) {
         navigator.share({
           title: profile.name,
-          text: shareText,
-          url: window.location.href
+          text,
+          url: location.href
         });
       } else {
-        window.location.href =
-          `mailto:?subject=${encodeURIComponent(profile.name)}&body=${encodeURIComponent(shareText + "\n\n" + window.location.href)}`;
+        location.href =
+          `mailto:?subject=${encodeURIComponent(profile.name)}&body=${encodeURIComponent(text)}`;
       }
     }
   </script>
