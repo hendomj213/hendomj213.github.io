@@ -232,7 +232,7 @@ body {
   font-size: 1rem;
   font-weight: 600;
   background: linear-gradient(135deg, var(--accent), #7dd3fc);
-  color: #020617;
+  color: #ffffff;
   cursor: pointer;
 }
 
@@ -364,7 +364,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   background: linear-gradient(135deg, var(--accent), #7dd3fc);
-  color: #020617;
+  color: #ffffff;
 }
 
 .name-row {
