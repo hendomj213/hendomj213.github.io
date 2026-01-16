@@ -118,12 +118,17 @@
     document.getElementById("headshot").src = profile.images.headshot;
     document.getElementById("companyLogo").src = profile.images.logo;
 
+    const email = document.getElementById("email");
+    const phone = document.getElementById("phone");
+    const website = document.getElementById("website");
+    const shareModal = document.getElementById("shareModal");
+    
     email.href = `mailto:${profile.email}`;
     email.textContent = profile.email;
-
+    
     phone.href = `tel:${profile.phone}`;
     phone.textContent = formatPhone(profile.phone);
-
+    
     website.href = profile.website;
     website.textContent = profile.website.replace("https://", "");
 
