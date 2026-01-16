@@ -169,8 +169,6 @@ body {
   }
 }
 
-/* Text */
-
 .name {
   font-size: 1.6rem;
   font-weight: 700;
@@ -187,7 +185,6 @@ body {
   color: var(--text-muted);
 }
 
-/* Contact */
 
 .section {
   margin-top: 20px;
@@ -202,7 +199,7 @@ body {
   color: var(--text-main);
   background: rgba(255,255,255,0.04);
   font-size: 0.95rem;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15 ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -214,6 +211,7 @@ body {
 
 .item:hover {
   transform: scale(1.05);
+  box-shadow: 0 3px 7px rgba(0,0,0,0.20);
   z-index: 1;
 }
 
@@ -229,16 +227,33 @@ body {
   border: none;
   font-size: 1rem;
   font-weight: 600;
-  background: linear-gradient(135deg, var(--accent), #7dd3fc);
   color: #ffffff;
   cursor: pointer;
-  transition: box-shadow 0.25s ease, transform 0.15s ease;
+
+  background: linear-gradient(
+    135deg,
+    var(--accent),
+    #7dd3fc,
+    var(--accent)
+  );
+  background-size: 200% 200%;
+  background-position: left center;
+
+  transition:
+    background-position 0.6s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
 }
 
 .cta-btn:hover {
+  background-position: right center;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.35);
   transform: scale(1.05);
-  box-shadow: 0 10px 30px rgba(125, 211, 252, 0.35);
-  z-index: 1;
+}
+
+.cta-btn:active {
+  background-position: center;
+  transform: scale(0.95);
 }
 
 .socials-wrapper {
@@ -282,13 +297,18 @@ body {
   aspect-ratio: 1 / 1;
   object-fit: contain;
   border-radius: 25%;
-  transition: transform 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
   transform-origin: center;
 }
 
 .social-icons img:hover {
   transform: scale(1.25);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
   z-index: 1;
+}
+
+.social-icons img:active {
+  transform: scale(0.9);
 }
 
 /* Share Modal */
@@ -353,18 +373,6 @@ body {
   margin-bottom: 18px;
 }
 
-.share-alt-btn {
-  width: 100%;
-  padding: 16px;
-  border-radius: 16px;
-  border: none;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  background: linear-gradient(135deg, var(--accent), #7dd3fc);
-  color: #ffffff;
-}
-
 .name-row {
   display: inline-flex;
   align-items: center;
@@ -389,7 +397,7 @@ body {
   height: 28px;
   flex-shrink: 0;
   border-radius: 50%;
-  border: none;
+  border: 1px solid #fff;
   background: #fff;
   color: #020617;
   font-size: 20px;
@@ -400,7 +408,11 @@ body {
   justify-content: center;
 }
 
-.add-contact-btn:active {
-  transform: scale(0.95);
+.add-contact-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
+.add-contact-btn:active {
+  transform: scale(0.9);
+}
