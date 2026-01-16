@@ -28,7 +28,7 @@
 
     <div class="name-row">
       <div class="name" id="name"></div>
-      <button class="share-mini" onclick="downloadVCard()" aria-label="Add to contacts">
+      <button class="add-contact-btn" onclick="downloadVCard()" aria-label="Add to contacts">
         +
       </button>
     </div>
@@ -157,39 +157,21 @@
     }
 
     function shareProfile() {
-  const subject = `${profile.name} Contact Information`;
-
-  const contactText = `${profile.name}
+  const text = `${profile.name}
 ${profile.title}
 ${profile.company}
 
-Email: ${profile.email}
 Phone: ${formatPhone(profile.phone)}
-Website: ${profile.website}`;
+Email: ${profile.email}`;
 
-  const smsText = `Here is ${profile.name}'s contact info:
-${profile.shareUrl}`;
-
-  // Mobile detection (good enough for SMS intent handling)
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-  if (navigator.share && isMobile) {
+  if (navigator.share) {
     navigator.share({
-      title: subject,
-      text: contactText,
-      url: profile.shareUrl
+      title: profile.name,
+      text
     });
   } else {
-    // Fallback: explicitly trigger SMS vs Email
-    const isSMS = confirm("Share via SMS?\nPress Cancel to share via Email.");
-
-    if (isSMS) {
-      location.href =
-        `sms:?&body=${encodeURIComponent(smsText)}`;
-    } else {
-      location.href =
-        `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(contactText)}`;
-    }
+    location.href =
+      `mailto:?subject=${encodeURIComponent(profile.name + " Contact Information")}&body=${encodeURIComponent(text)}`;
   }
 }
 
