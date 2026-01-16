@@ -10,49 +10,67 @@
 <body>
   <div class="card">
 
-    <!-- Header -->
     <div class="header">
-      <div class="photo">PHOTO</div>
+      <div class="photo">
+        <img id="headshot" alt="Profile photo">
+      </div>
 
       <div class="header-right">
-        <button class="share-mini" onclick="shareProfile()">Share Profile</button>
-        <div class="logo">LOGO</div>
+        <div class="header-actions">
+          <button class="share-mini" onclick="downloadVCard()">Add to Contacts</button>
+          <button class="share-mini" onclick="openShareModal()">Share Profile</button>
+        </div>
+
+        <div class="logo">
+          <img id="companyLogo" alt="Company logo">
+        </div>
       </div>
     </div>
 
-    <!-- Identity -->
     <div class="name" id="name"></div>
     <div class="title" id="title"></div>
     <div class="company" id="company"></div>
 
-    <!-- Contact -->
     <div class="section">
       <a class="item" id="email"></a>
       <a class="item" id="phone"></a>
       <a class="item" id="website"></a>
     </div>
 
-    <!-- CTA -->
-    <button class="cta-btn">
+    <button class="cta-btn" id="calendarBtn">
       Book a Calendar Meeting
     </button>
 
-    <!-- Socials -->
     <div class="socials-wrapper">
       <div class="socials-label">
-        <span></span>
-        socials
-        <span></span>
+        <span></span> socials <span></span>
       </div>
 
       <div class="social-icons">
-        <a class="social-icon" id="icon-linkedin">ICON</a>
-        <a class="social-icon" id="icon-twitter">ICON</a>
-        <a class="social-icon" id="icon-github">ICON</a>
-        <a class="social-icon" id="icon-extra">ICON</a>
+        <a id="social-linkedin"><img src="assets/icons/linkedin.svg"></a>
+        <a id="social-facebook"><img src="assets/icons/facebook.svg"></a>
+        <a id="social-instagram"><img src="assets/icons/instagram.svg"></a>
+        <a id="social-whatsapp"><img src="assets/icons/whatsapp.svg"></a>
+        <a id="social-snapchat"><img src="assets/icons/snapchat.svg"></a>
+        <a id="social-letterboxd"><img src="assets/icons/letterboxd.svg"></a>
       </div>
     </div>
 
+  </div>
+
+  <div class="share-modal" id="shareModal" onclick="closeShareModal()">
+    <div class="share-modal-content" onclick="event.stopPropagation()">
+      <button class="share-close" onclick="closeShareModal()">✕</button>
+      <h3>Share Profile</h3>
+
+      <div class="qr-wrapper">
+        <img id="qrImage" alt="QR Code">
+      </div>
+
+      <p class="qr-hint">Scan this QR code to share!</p>
+
+      <button class="share-alt-btn" onclick="shareProfile()">Other ways to share</button>
+    </div>
   </div>
 
   <script>
@@ -60,51 +78,133 @@
       name: "Mason Henderson",
       title: "Director of Data & Financial Operations",
       company: "Snooze Mattress + Wellness",
-      email: "mailto:mason@example.com",
-      phone: "tel:+15555551234",
-      website: "https://example.com",
-      linkedin: "https://linkedin.com/in/yourprofile",
-      twitter: "https://twitter.com/yourhandle",
-      github: "https://github.com/yourusername"
+
+      email: "mhenderson@snoozesleep.com",
+      phone: "+17192147729",
+      website: "https://snoozemattresscompany.com",
+
+      calendarUrl: "https://calendar.google.com/appointments/schedules/AcZssZ1Sy1NJqDkSxb78sHIjUj8vk8qJQCKeXpL73XVyg60FHlyQdCgXPvlsYaVt1ogdII6ol3OC0521",
+
+      images: {
+        headshot: "assets/images/headshot-ai.png",
+        logo: "assets/images/snooze-logo.png"
+      },
+
+      socials: {
+        linkedin: "https://linkedin.com/in/mason-j-henderson",
+        facebook: "https://facebook.com/profile.php?id=61551319502785",
+        instagram: "https://instagram.com/hendomj213/",
+        whatsapp: "https://wa.me/17192147729",
+        snapchat: "https://snapchat.com/add/mason_damaster",
+        letterboxd: "https://letterboxd.com/Mason_Henderson/"
+      },
+
+      shareUrl: "https://hendomj213.github.io/"
     };
+
+    function formatPhone(phone) {
+      const digits = phone.replace(/\D/g, "");
+      const country = digits.slice(0, 1);
+      const area = digits.slice(1, 4);
+      const prefix = digits.slice(4, 7);
+      const line = digits.slice(7, 11);
+      return `+${country} (${area}) ${prefix}-${line}`;
+    }
 
     document.getElementById("name").textContent = profile.name;
     document.getElementById("title").textContent = profile.title;
     document.getElementById("company").textContent = profile.company;
 
-    email.href = profile.email;
-    email.textContent = profile.email.replace("mailto:", "");
+    document.getElementById("headshot").src = profile.images.headshot;
+    document.getElementById("companyLogo").src = profile.images.logo;
 
-    phone.href = profile.phone;
-    phone.textContent = profile.phone.replace("tel:", "");
+    email.href = `mailto:${profile.email}`;
+    email.textContent = profile.email;
+
+    phone.href = `tel:${profile.phone}`;
+    phone.textContent = formatPhone(profile.phone);
 
     website.href = profile.website;
-    website.textContent = profile.website;
+    website.textContent = profile.website.replace("https://", "");
 
-    document.getElementById("icon-linkedin").href = profile.linkedin;
-    document.getElementById("icon-twitter").href = profile.twitter;
-    document.getElementById("icon-github").href = profile.github;
+    if (!profile.calendarUrl) {
+      document.getElementById("calendarBtn").style.display = "none";
+    }
+
+    Object.entries(profile.socials).forEach(([key, url]) => {
+      const el = document.getElementById(`social-${key}`);
+      if (el) el.href = url;
+    });
+
+    document.getElementById("qrImage").src =
+      `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(profile.shareUrl)}`;
+
+    function openShareModal() {
+      shareModal.classList.add("active");
+    }
+
+    function closeShareModal() {
+      shareModal.classList.remove("active");
+    }
 
     function shareProfile() {
       const text = `${profile.name}
 ${profile.title}
 ${profile.company}
 
-Email: ${profile.email.replace("mailto:", "")}
-Phone: ${profile.phone.replace("tel:", "")}
+Email: ${profile.email}
+Phone: ${formatPhone(profile.phone)}
 Website: ${profile.website}`;
 
       if (navigator.share) {
         navigator.share({
           title: profile.name,
           text,
-          url: location.href
+          url: profile.shareUrl
         });
       } else {
         location.href =
           `mailto:?subject=${encodeURIComponent(profile.name)}&body=${encodeURIComponent(text)}`;
       }
     }
+
+    function downloadVCard() {
+      const vCard = `
+BEGIN:VCARD
+VERSION:3.0
+N:${profile.name.split(" ").reverse().join(";")};;;
+FN:${profile.name}
+ORG:${profile.company}
+TITLE:${profile.title}
+TEL;TYPE=CELL:${profile.phone}
+EMAIL;TYPE=WORK:${profile.email}
+URL:${profile.website}
+END:VCARD
+      `.trim();
+
+      const blob = new Blob([vCard], { type: "text/vcard" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = profile.name.replace(" ", "_") + ".vcf";
+      document.body.appendChild(a);
+      a.click();
+
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    const calendarBtn = document.getElementById("calendarBtn");
+
+    if (profile.calendarUrl) {
+      calendarBtn.addEventListener("click", () => {
+        window.open(profile.calendarUrl, "_blank", "noopener");
+      });
+    } else {
+      calendarBtn.style.display = "none";
+    }
+
   </script>
 </body>
 </html>
