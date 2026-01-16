@@ -369,31 +369,38 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  justify-content: center;
+  white-space: nowrap;
+}
+
+.name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.name {
+  max-width: 80vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .add-contact-btn {
   width: 28px;
   height: 28px;
+  flex-shrink: 0;
   border-radius: 50%;
   border: none;
   background: #000;
   color: #fff;
   font-size: 20px;
   font-weight: 600;
-  line-height: 1;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.add-contact-btn:hover {
-  opacity: 0.85;
+.add-contact-btn:active {
+  transform: scale(0.95);
 }
 
-@media (max-width: 480px) {
-  .header-actions {
-    flex-direction: row;
-  }
-}
