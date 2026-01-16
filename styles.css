@@ -238,6 +238,7 @@ body {
 
 .cta-btn:hover {
   transform: scale(1.05);
+  background: linear-gradient(315deg, var(--accent), #7dd3fc);
   z-index: 1;
 }
 
