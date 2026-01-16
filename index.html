@@ -153,7 +153,9 @@
     }
 
     function shareProfile() {
-      const text = `${profile.name}
+  const subject = `${profile.name} Contact Information`;
+
+  const contactText = `${profile.name}
 ${profile.title}
 ${profile.company}
 
@@ -161,17 +163,31 @@ Email: ${profile.email}
 Phone: ${formatPhone(profile.phone)}
 Website: ${profile.website}`;
 
-      if (navigator.share) {
-        navigator.share({
-          title: profile.name,
-          text,
-          url: profile.shareUrl
-        });
-      } else {
-        location.href =
-          `mailto:?subject=${encodeURIComponent(profile.name)}&body=${encodeURIComponent(text)}`;
-      }
+  const smsText = `Here is ${profile.name}'s contact info:
+${profile.shareUrl}`;
+
+  // Mobile detection (good enough for SMS intent handling)
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (navigator.share && isMobile) {
+    navigator.share({
+      title: subject,
+      text: contactText,
+      url: profile.shareUrl
+    });
+  } else {
+    // Fallback: explicitly trigger SMS vs Email
+    const isSMS = confirm("Share via SMS?\nPress Cancel to share via Email.");
+
+    if (isSMS) {
+      location.href =
+        `sms:?&body=${encodeURIComponent(smsText)}`;
+    } else {
+      location.href =
+        `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(contactText)}`;
     }
+  }
+}
 
     function downloadVCard() {
       const vCard = `
