@@ -37,6 +37,69 @@ body {
   box-shadow: 0 20px 50px rgba(0,0,0,0.35);
 }
 
+/* Tablet scaling — ~1.5x */
+@media (min-width: 768px) and (max-width: 1024px) {
+
+  .card {
+    max-width: 630px;     /* ~1.5x 420 */
+    padding: 36px;
+    border-radius: 28px;
+  }
+
+  /* Header */
+  .photo {
+    width: 165px;
+  }
+
+  .logo {
+    width: 180px;
+    height: 90px;
+    border-radius: 18px;
+  }
+
+  .share-mini {
+    font-size: 0.85rem;
+    padding: 8px 14px;
+    border-radius: 12px;
+  }
+
+  /* Text */
+  .name {
+    font-size: 2.3rem;
+  }
+
+  .title {
+    font-size: 1.15rem;
+  }
+
+  .company {
+    font-size: 1.05rem;
+  }
+
+  /* Contact items */
+  .item {
+    font-size: 1.1rem;
+    padding: 16px 18px;
+    border-radius: 16px;
+  }
+
+  /* CTA */
+  .cta-btn {
+    padding: 20px;
+    font-size: 1.15rem;
+    border-radius: 20px;
+  }
+
+  /* Social icons */
+  .social-icons {
+    gap: 22px;
+  }
+
+  .social-icons img {
+    max-width: 64px;      /* ~1.5x 42 */
+  }
+}
+
 /* Header */
 
 .header {
@@ -47,15 +110,21 @@ body {
 }
 
 .photo {
-  width: 110px;
-  height: 110px;
+  width: clamp(96px, 22vw, 140px);
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
+  overflow: hidden;
   background: rgba(255,255,255,0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  color: var(--text-muted);
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .header-right {
@@ -66,15 +135,20 @@ body {
 }
 
 .logo {
-  width: 120px;
-  height: 60px;
+  width: clamp(110px, 28vw, 180px);
+  aspect-ratio: 2 / 1;     /* keeps logo proportions */
   border-radius: 14px;
-  background: rgba(255,255,255,0.15);
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
-  color: var(--text-muted);
+}
+
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .share-mini {
@@ -136,6 +210,11 @@ body {
   }
 }
 
+.item:hover {
+  transform: scale(1.05);
+  z-index: 1;
+}
+
 .item:active {
   transform: scale(0.98);
 }
@@ -153,6 +232,11 @@ body {
   background: linear-gradient(135deg, var(--accent), #7dd3fc);
   color: #020617;
   cursor: pointer;
+}
+
+.cta-btn:hover {
+  transform: scale(1.05);
+  z-index: 1;
 }
 
 /* Socials */
@@ -178,24 +262,105 @@ body {
 
 .social-icons {
   display: flex;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  margin-top: 14px;
 }
 
-.social-icon {
+.social-icons a {
   flex: 1;
-  height: 64px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.15);
   display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.social-icons img {
+  width: 100%;
+  max-width: 42px;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  border-radius: 25%;
+  transition: transform 0.25s ease;
+  transform-origin: center;
+}
+
+.social-icons img:hover {
+  transform: scale(1.25);
+  z-index: 1;
+}
+
+/* Share Modal */
+
+.share-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(8px);
+  display: none;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  text-decoration: none;
+  z-index: 999;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .social-icon:hover {
-    background: rgba(79,156,255,0.25);
-  }
+.share-modal.active {
+  display: flex;
+}
+
+.share-modal-content {
+  background: var(--card-bg);
+  border-radius: 22px;
+  padding: 28px;
+  width: min(92%, 380px);
+  text-align: center;
+  position: relative;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.55);
+}
+
+.share-modal-content h3 {
+  margin: 0 0 14px;
+}
+
+.share-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.qr-wrapper {
+  margin: 18px auto 10px;
+  width: 240px;
+  max-width: 100%;
+}
+
+.qr-wrapper img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  background: #fff;
+  padding: 12px;
+}
+
+.qr-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+
+.share-alt-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), #7dd3fc);
+  color: #020617;
 }
