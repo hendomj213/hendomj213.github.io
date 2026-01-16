@@ -234,6 +234,9 @@ body {
   background: linear-gradient(135deg, var(--accent), #7dd3fc);
   color: #ffffff;
   cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    background 0.4s ease;
 }
 
 .cta-btn:hover {
