@@ -209,6 +209,7 @@ body {
   flex-shrink: 0;
   margin: 0;
   padding: 0;
+  background: transparent;
 }
 
 .item-text {
