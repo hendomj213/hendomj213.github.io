@@ -16,10 +16,6 @@
       </div>
 
       <div class="header-right">
-        <div class="header-actions">
-          <button class="share-mini" onclick="openShareModal()">Share Profile</button>
-        </div>
-
         <div class="logo">
           <img id="companyLogo" alt="Company logo">
         </div>
@@ -28,7 +24,7 @@
 
     <div class="name-row">
       <div class="name" id="name"></div>
-      <button class="add-contact-btn" onclick="downloadVCard()" aria-label="Add to contacts">
+      <button class="add-contact-btn" onclick="openShareModal()" aria-label="Add to contacts">
         +
       </button>
     </div>
@@ -39,6 +35,7 @@
       <a class="item" id="email"></a>
       <a class="item" id="phone"></a>
       <a class="item" id="website"></a>
+      <a class="item" id="address"></a>
     </div>
 
     <button class="cta-btn" id="calendarBtn">
@@ -65,7 +62,7 @@
   <div class="share-modal" id="shareModal" onclick="closeShareModal()">
     <div class="share-modal-content" onclick="event.stopPropagation()">
       <button class="share-close" onclick="closeShareModal()">✕</button>
-      <h3>Share Profile</h3>
+      <h3>More Actions</h3>
 
       <div class="qr-wrapper">
         <img id="qrImage" alt="QR Code">
@@ -73,7 +70,8 @@
 
       <p class="qr-hint">Scan this QR code to share!</p>
 
-      <button class="cta-btn" onclick="shareProfile()">Other ways to share</button>
+      <button class="cta-btn" onclick="shareProfile()">Other Ways to Share</button>
+      <button class="cta-btn" onclick="downloadVCard()">Add to Contacts</button>
     </div>
   </div>
 
@@ -86,6 +84,13 @@
       email: "mhenderson@snoozesleep.com",
       phone: "+17192147729",
       website: "https://snoozemattresscompany.com",
+
+      address_line_1: "Remote",
+      address_line_2: "",
+      city: "Amarillo",
+      state: "TX",
+      zip: "",
+      country: "",
 
       calendarUrl: "https://calendar.google.com/appointments/schedules/AcZssZ1Sy1NJqDkSxb78sHIjUj8vk8qJQCKeXpL73XVyg60FHlyQdCgXPvlsYaVt1ogdII6ol3OC0521",
 
@@ -108,13 +113,18 @@
 
     function formatPhone(phone) {
       const digits = phone.replace(/\D/g, "");
-      const country = digits.slice(0, 1);
-      const area = digits.slice(1, 4);
-      const prefix = digits.slice(4, 7);
-      const line = digits.slice(7, 11);
-      return `+${country} (${area}) ${prefix}-${line}`;
+      const country = digits.length === 11 ? digits[0] : "1";
+      const offset = digits.length === 11 ? 1 : 0;
+
+      return `+${country} (${digits.slice(offset, offset + 3)}) ${digits.slice(offset + 3, offset + 6)}-${digits.slice(offset + 6, offset + 10)}`;
     }
 
+    const removeIfEmpty = (el, value) => {
+      if (!value) el?.remove();
+      return Boolean(value);
+    };
+
+    // Basic info
     document.getElementById("name").textContent = profile.name;
     document.getElementById("title").textContent = profile.title;
     document.getElementById("company").textContent = profile.company;
@@ -122,31 +132,132 @@
     document.getElementById("headshot").src = profile.images.headshot;
     document.getElementById("companyLogo").src = profile.images.logo;
 
-    const email = document.getElementById("email");
-    const phone = document.getElementById("phone");
-    const website = document.getElementById("website");
-    const shareModal = document.getElementById("shareModal");
-    
-    email.href = `mailto:${profile.email}`;
-    email.textContent = profile.email;
-    
-    phone.href = `tel:${profile.phone}`;
-    phone.textContent = formatPhone(profile.phone);
-    
-    website.href = profile.website;
-    website.textContent = profile.website.replace("https://", "");
+    // Contact items
+    const emailEl = document.getElementById("email");
 
-    if (!profile.calendarUrl) {
-      document.getElementById("calendarBtn").style.display = "none";
+    if (profile.email) {
+      emailEl.href = `mailto:${profile.email}`;
+      emailEl.innerHTML = `
+        <img src="email.svg" class="item-icon" alt="Email">
+        <span class="item-text">${profile.email}</span>
+      `;
+    } else {
+      emailEl.remove();
     }
 
+    const phoneEl = document.getElementById("phone");
+
+    if (profile.phone) {
+      phoneEl.href = `tel:${profile.phone}`;
+      phoneEl.innerHTML = `
+        <img src="phone.svg" class="item-icon" alt="Phone">
+        <span class="item-text">${formatPhone(profile.phone)}</span>
+      `;
+    } else {
+      phoneEl.remove();
+    }
+
+    const websiteEl = document.getElementById("website");
+
+    if (profile.website) {
+      websiteEl.href = profile.website;
+      websiteEl.innerHTML = `
+      <img src="website.svg" class="item-icon" alt="Website">
+      <span class="item-text">${profile.website.replace(/^https?:\/\//, "")}</span>
+      `;
+    } else {
+      websiteEl.remove();
+    }
+
+    const addressEl = document.getElementById("address");
+
+    // Build city/state/zip/country line
+    const cityLine = [
+      profile.city && `${profile.city}${profile.state ? "," : ""}`,
+      profile.state,
+      profile.zip,
+      profile.country
+    ].filter(Boolean).join(" ");
+
+    // Check for "Remote" (case-insensitive, trimmed)
+    const isRemote =
+      profile.address_line_1 &&
+      profile.address_line_1.trim().toLowerCase() === "remote";
+
+    if (isRemote && cityLine) {
+      // Display text
+      const remoteDisplay = `Remote - ${cityLine}`;
+
+      // Maps query (omit "Remote -")
+      const mapsQuery = cityLine;
+
+      addressEl.href =
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`;
+      addressEl.target = "_blank";
+      addressEl.rel = "noopener";
+
+      addressEl.innerHTML = `
+        <img src="address.svg" class="item-icon" alt="Address">
+        <span class="item-text">${remoteDisplay}</span>
+      `;
+    } else {
+      // Normal two-line address
+      const line1 = [
+        profile.address_line_1,
+        profile.address_line_2
+      ].filter(Boolean).join(" ");
+
+      if (line1 || cityLine) {
+        const fullAddress = [line1, cityLine].filter(Boolean).join(", ");
+
+        addressEl.href =
+          `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+        addressEl.target = "_blank";
+        addressEl.rel = "noopener";
+
+        addressEl.innerHTML = `
+          <img src="address.svg" class="item-icon" alt="Address">
+          <span class="item-text">
+            ${line1 ? `<div>${line1}</div>` : ""}
+            ${cityLine ? `<div>${cityLine}</div>` : ""}
+          </span>
+        `;
+      } else {
+        addressEl.remove();
+      }
+    }
+
+    // Remove entire section if empty
+    if (!document.querySelector(".section .item")) {
+      document.querySelector(".section")?.remove();
+    }
+
+    // Calendar
+    const calendarBtn = document.getElementById("calendarBtn");
+    if (profile.calendarUrl) {
+      calendarBtn.addEventListener("click", () => {
+        window.open(profile.calendarUrl, "_blank", "noopener");
+      });
+    } else {
+      calendarBtn.remove();
+    }
+
+    // Socials
     Object.entries(profile.socials).forEach(([key, url]) => {
       const el = document.getElementById(`social-${key}`);
-      if (el) el.href = url;
+      if (url) {
+        el.href = url;
+      } else {
+        el?.remove();
+      }
     });
 
+    // QR
     document.getElementById("qrImage").src =
       `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(profile.shareUrl)}`;
+
+    // Share modal
+    const shareModal = document.getElementById("shareModal");
 
     function openShareModal() {
       shareModal.classList.add("active");
@@ -157,36 +268,38 @@
     }
 
     function shareProfile() {
-  const text = `${profile.name}
-${profile.title}
-${profile.company}
+      const lines = [
+        profile.name,
+        profile.title,
+        profile.company,
+        "",
+        profile.phone && `Phone: ${formatPhone(profile.phone)}`,
+        profile.email && `Email: ${profile.email}`
+      ].filter(Boolean);
 
-Phone: ${formatPhone(profile.phone)}
-Email: ${profile.email}`;
+      const text = lines.join("\n");
 
-  if (navigator.share) {
-    navigator.share({
-      title: profile.name,
-      text
-    });
-  } else {
-    location.href =
-      `mailto:?subject=${encodeURIComponent(profile.name + " Contact Information")}&body=${encodeURIComponent(text)}`;
-  }
-}
+      if (navigator.share) {
+        navigator.share({ title: profile.name, text });
+      } else {
+        location.href =
+          `mailto:?subject=${encodeURIComponent(profile.name + " Contact Information")}&body=${encodeURIComponent(text)}`;
+      }
+    }
 
     function downloadVCard() {
       const vCard = `
-BEGIN:VCARD
-VERSION:3.0
-N:${profile.name.split(" ").reverse().join(";")};;;
-FN:${profile.name}
-ORG:${profile.company}
-TITLE:${profile.title}
-TEL;TYPE=CELL:${profile.phone}
-EMAIL;TYPE=WORK:${profile.email}
-URL:${profile.website}
-END:VCARD
+  BEGIN:VCARD
+  VERSION:3.0
+  N:${profile.name.split(" ").reverse().join(";")};;;
+  FN:${profile.name}
+  ORG:${profile.company}
+  TITLE:${profile.title}
+  TEL;TYPE=CELL:${profile.phone || ""}
+  EMAIL;TYPE=WORK:${profile.email || ""}
+  URL:${profile.website || ""}
+  ADR;TYPE=WORK:;;${profile.address_line_1 || ""};${profile.city || ""};${profile.state || ""};${profile.zip || ""};${profile.country || ""}
+  END:VCARD
       `.trim();
 
       const blob = new Blob([vCard], { type: "text/vcard" });
@@ -201,17 +314,6 @@ END:VCARD
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
-
-    const calendarBtn = document.getElementById("calendarBtn");
-
-    if (profile.calendarUrl) {
-      calendarBtn.addEventListener("click", () => {
-        window.open(profile.calendarUrl, "_blank", "noopener");
-      });
-    } else {
-      calendarBtn.style.display = "none";
-    }
-
   </script>
 </body>
 </html>
