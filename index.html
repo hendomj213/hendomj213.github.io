@@ -242,15 +242,28 @@
       calendarBtn.remove();
     }
 
-    // Socials
-    Object.entries(profile.socials).forEach(([key, url]) => {
-      const el = document.getElementById(`social-${key}`);
+    // Socials (remove icons with no profile link)
+    const socialsWrapper = document.querySelector(".socials-wrapper");
+    const socialIcons = document.querySelectorAll(".social-icons a");
+    
+    socialIcons.forEach(icon => {
+      const key = icon.id.replace("social-", "");
+      const url = profile.socials[key];
+    
       if (url) {
-        el.href = url;
+        icon.href = url;
+        icon.target = "_blank";
+        icon.rel = "noopener";
       } else {
-        el?.remove();
+        icon.remove();
       }
     });
+    
+    // Remove socials section if nothing remains
+    if (!document.querySelector(".social-icons a")) {
+      socialsWrapper?.remove();
+    }
+
 
     // QR
     document.getElementById("qrImage").src =
