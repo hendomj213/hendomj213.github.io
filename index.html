@@ -72,6 +72,7 @@
 
       <button class="cta-btn" onclick="shareProfile()">Other Ways to Share</button>
       <button class="cta-btn" onclick="downloadVCard()">Add to Contacts</button>
+      <button class="cta-btn" onclick="openResumePage()">View Resume</button>
     </div>
   </div>
 
@@ -110,6 +111,8 @@
 
       shareUrl: "https://hendomj213.github.io/"
     };
+
+    const resumeUrl = "resume.html";
 
     function formatPhone(phone) {
       const digits = phone.replace(/\D/g, "");
@@ -326,6 +329,10 @@
 
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    }
+
+    function openResumePage() {
+      window.open(resumeUrl, "_blank", "noopener");
     }
   </script>
 </body>
