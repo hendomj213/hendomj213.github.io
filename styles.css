@@ -570,11 +570,16 @@ body {
   justify-content: center;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  font-size: 1.35rem;
-  line-height: 1;
   flex-shrink: 0;
   background: transparent;
   transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.job-arrow::before {
+  content: "⌄";
+  font-size: 1.35rem;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 
 .job-card[open] .job-arrow {
