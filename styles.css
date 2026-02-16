@@ -455,19 +455,7 @@ body {
 }
 
 .resume-identity {
-  display: flex;
-  align-items: center;
-  gap: 16px;
   margin-bottom: 14px;
-}
-
-.resume-photo {
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.12);
 }
 
 .resume-name {
@@ -565,21 +553,26 @@ body {
 .job-arrow {
   width: 34px;
   height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  position: relative;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.35);
   flex-shrink: 0;
   background: transparent;
+  margin-left: 4px;
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .job-arrow::before {
-  content: "⌄";
-  font-size: 1.35rem;
-  line-height: 1;
-  transform: translateY(-1px);
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid rgba(248, 250, 252, 0.95);
+  border-bottom: 2px solid rgba(248, 250, 252, 0.95);
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  transform: rotate(45deg);
 }
 
 .job-card[open] .job-arrow {
@@ -615,12 +608,7 @@ body {
   }
 
   .resume-identity {
-    align-items: flex-start;
-  }
-
-  .resume-photo {
-    width: 70px;
-    height: 70px;
+    margin-bottom: 10px;
   }
 
   .resume-name {
