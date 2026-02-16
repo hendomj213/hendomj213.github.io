@@ -11,11 +11,8 @@
     <a class="back-link" href="index.html" aria-label="Back to contact card">← Back to Contact Card</a>
 
     <div class="resume-identity">
-      <img id="resumePhoto" class="resume-photo" alt="Mason Henderson profile photo" />
-      <div>
-        <h1 id="resumeName" class="resume-name"></h1>
-        <p id="resumeContact" class="resume-contact"></p>
-      </div>
+      <h1 id="resumeName" class="resume-name"></h1>
+      <p id="resumeContact" class="resume-contact"></p>
     </div>
 
     <section class="resume-section" id="educationSection">
@@ -48,18 +45,18 @@
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#39;");
 
-    const buildDetailCard = (entry, isOpen = false) => {
+    const buildJobCard = entry => {
       const detailsMarkup = (entry.details || [])
         .map(detail => `<li>${escapeHtml(detail)}</li>`)
         .join("");
 
       return `
-       <details class="job-card">
+        <details class="job-card">
           <summary>
             <img src="${escapeHtml(entry.logo || "")}" alt="${escapeHtml(entry.logoAlt || "Organization logo")}" class="job-logo" />
             <div class="job-meta">
-              <p class="job-title">${escapeHtml(entry.title || "")}</p>
               <p class="job-company">${escapeHtml(entry.organization || "")}</p>
+              <p class="job-title">${escapeHtml(entry.title || "")}</p>
               <p class="job-dates">${escapeHtml(entry.dates || "")}</p>
             </div>
             <span class="job-arrow" aria-hidden="true"></span>
@@ -85,7 +82,6 @@
       .then(data => {
         const profile = data.profile || {};
 
-        document.getElementById("resumePhoto").src = profile.photo || "";
         document.getElementById("resumeName").textContent = profile.name || "";
         document.getElementById("resumeContact").textContent = [
           profile.location,
@@ -95,17 +91,17 @@
 
         const educationList = document.getElementById("educationList");
         educationList.innerHTML = (data.education || [])
-          .map(buildDetailCard)
+          .map(buildJobCard)
           .join("");
-        
+
         const skillsList = document.getElementById("skillsList");
         skillsList.innerHTML = (data.skills || [])
           .map(skill => `<li>${escapeHtml(skill)}</li>`)
           .join("");
-        
+
         const experienceList = document.getElementById("experienceList");
         experienceList.innerHTML = (data.experience || [])
-          .map(buildDetailCard)
+          .map(buildJobCard)
           .join("");
 
         const awardsList = document.getElementById("awardsList");
