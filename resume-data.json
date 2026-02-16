@@ -1,0 +1,96 @@
+{
+  "profile": {
+    "name": "Mason Henderson",
+    "photo": "headshot-ai.png",
+    "location": "Pueblo, Colorado 81005",
+    "phone": "719-214-7729",
+    "email": "hendomj213@gmail.com"
+  },
+  "education": [
+    {
+      "logo": "csup-logo.svg",
+      "logoAlt": "Colorado State University Pueblo logo",
+      "title": "Bachelor of Science",
+      "organization": "Colorado State University - Pueblo",
+      "dates": "Expected Graduation May 2024",
+      "details": [
+        "Majors: Marketing and Finance",
+        "3.96 GPA, Dean's List Fall 2020-Spring 2023",
+        "Relevant Coursework: Marketing Research, Social Media and E-Marketing, Advanced Business Statistics",
+        "Participated in Study Abroad (Summer 2023) to Harlaxton, England studying marketing concepts"
+      ]
+    }
+  ],
+  "skills": [
+    "Talented with Microsoft Word, PowerPoint, and Excel",
+    "Skillful in public speaking and presentation",
+    "Outstanding problem-solving skills",
+    "Excels in individual and team settings",
+    "Analytical critical thinking skills",
+    "Conflict resolution and leadership techniques",
+    "Shopify store management",
+    "Social media content creation and management",
+    "Google Ads certified"
+  ],
+  "experience": [
+    {
+      "logo": "snooze-logo.png",
+      "logoAlt": "Snooze Mattress + Wellness logo",
+      "title": "Marketing Specialist",
+      "organization": "Wake Up! Pueblo / Snooze Mattress Company",
+      "dates": "May 2023 - Present",
+      "details": [
+        "Created engaging and unique (static) social media content and managed multiple social accounts.",
+        "Developed and adhered to unique brand imagery/guidelines to create promotional materials.",
+        "Built and managed an online Shopify store with shopping integrations and product pages.",
+        "Evaluated website performance and implemented SEO techniques to increase traffic and conversions.",
+        "Managed social media accounts, increasing followers and user engagement through strategic content planning.",
+        "Prepared regular performance reports for clients to showcase campaign results and optimization areas.",
+        "Developed email campaigns for promotions, product releases, and updates.",
+        "Created comprehensive marketing strategies aligned with business goals.",
+        "Developed and optimized Google Ads and social media advertising campaigns."
+      ]
+    },
+    {
+      "logo": "csup-logo.svg",
+      "logoAlt": "Colorado State University Pueblo logo",
+      "title": "Hasan School of Business Tutor",
+      "organization": "Colorado State University - Pueblo",
+      "dates": "Jan 2023 - May 2023",
+      "details": [
+        "Tutored students in basic and advanced statistics, principles of finance, and basic Java code.",
+        "Collaborated with students to complete assignments, identify lagging skills, and correct weaknesses.",
+        "Developed student confidence through positive reinforcement strategies.",
+        "Assisted students in reaching targeted performance levels through individualized coaching."
+      ]
+    },
+    {
+      "logo": "dq-logo.svg",
+      "logoAlt": "Dairy Queen Grill & Chill logo",
+      "title": "Shift Supervisor",
+      "organization": "Dairy Queen Grill & Chill",
+      "dates": "Jul 2020 - May 2022",
+      "details": [
+        "Managed shift operations and monitored team performance to keep business running smoothly.",
+        "Delivered successful training to more than 15 employees, educating on successful work processes and productivity strategies.",
+        "Developed and implemented new processes and procedures to streamline operations."
+      ]
+    }
+  ],
+  "awards": [
+    {
+      "logo": "award-logo.svg",
+      "logoAlt": "Award icon",
+      "title": "Dean's List",
+      "subtitle": "Colorado State University - Pueblo",
+      "year": "2020-2023"
+    },
+    {
+      "logo": "award-logo.svg",
+      "logoAlt": "Award icon",
+      "title": "Google Ads Certified",
+      "subtitle": "Google Skillshop",
+      "year": "Current"
+    }
+  ]
+}
