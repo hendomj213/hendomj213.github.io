@@ -54,7 +54,7 @@
         .join("");
 
       return `
-        <details class="job-card" ${isOpen ? "open" : ""}>
+       <details class="job-card">
           <summary>
             <img src="${escapeHtml(entry.logo || "")}" alt="${escapeHtml(entry.logoAlt || "Organization logo")}" class="job-logo" />
             <div class="job-meta">
@@ -62,7 +62,7 @@
               <p class="job-company">${escapeHtml(entry.organization || "")}</p>
               <p class="job-dates">${escapeHtml(entry.dates || "")}</p>
             </div>
-            <span class="job-arrow" aria-hidden="true">⌄</span>
+            <span class="job-arrow" aria-hidden="true"></span>
           </summary>
           <ul>${detailsMarkup}</ul>
         </details>
@@ -95,17 +95,17 @@
 
         const educationList = document.getElementById("educationList");
         educationList.innerHTML = (data.education || [])
-          .map((entry, index) => buildDetailCard(entry, index === 0))
+          .map(buildDetailCard)
           .join("");
-
+        
         const skillsList = document.getElementById("skillsList");
         skillsList.innerHTML = (data.skills || [])
           .map(skill => `<li>${escapeHtml(skill)}</li>`)
           .join("");
-
+        
         const experienceList = document.getElementById("experienceList");
         experienceList.innerHTML = (data.experience || [])
-          .map((entry, index) => buildDetailCard(entry, index === 0))
+          .map(buildDetailCard)
           .join("");
 
         const awardsList = document.getElementById("awardsList");
