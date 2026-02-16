@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Mason Henderson - Resume</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="card resume-card">
+    <a class="back-link" href="index.html" aria-label="Back to contact card">← Back to Contact Card</a>
+
+    <div class="resume-identity">
+      <img id="resumePhoto" class="resume-photo" alt="Mason Henderson profile photo" />
+      <div>
+        <h1 id="resumeName" class="resume-name"></h1>
+        <p id="resumeContact" class="resume-contact"></p>
+      </div>
+    </div>
+
+    <section class="resume-section" id="educationSection">
+      <h2>Education</h2>
+      <div id="educationList"></div>
+    </section>
+
+    <section class="resume-section" id="skillsSection">
+      <h2>Skills &amp; Abilities</h2>
+      <ul id="skillsList" class="skills-grid"></ul>
+    </section>
+
+    <section class="resume-section" id="experienceSection">
+      <h2>Work Experience</h2>
+      <div id="experienceList"></div>
+    </section>
+
+    <section class="resume-section" id="awardsSection">
+      <h2>Awards &amp; Certifications</h2>
+      <div id="awardsList"></div>
+    </section>
+  </div>
+
+  <script>
+    const escapeHtml = (value = "") =>
+      value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+
+    const buildDetailCard = (entry, isOpen = false) => {
+      const detailsMarkup = (entry.details || [])
+        .map(detail => `<li>${escapeHtml(detail)}</li>`)
+        .join("");
+
+      return `
+        <details class="job-card" ${isOpen ? "open" : ""}>
+          <summary>
+            <img src="${escapeHtml(entry.logo || "")}" alt="${escapeHtml(entry.logoAlt || "Organization logo")}" class="job-logo" />
+            <div class="job-meta">
+              <p class="job-title">${escapeHtml(entry.title || "")}</p>
+              <p class="job-company">${escapeHtml(entry.organization || "")}</p>
+              <p class="job-dates">${escapeHtml(entry.dates || "")}</p>
+            </div>
+            <span class="job-arrow" aria-hidden="true">⌄</span>
+          </summary>
+          <ul>${detailsMarkup}</ul>
+        </details>
+      `;
+    };
+
+    const buildAwardCard = entry => `
+      <article class="award-card">
+        <img src="${escapeHtml(entry.logo || "")}" alt="${escapeHtml(entry.logoAlt || "Award logo")}" class="job-logo" />
+        <div class="job-meta">
+          <p class="job-title">${escapeHtml(entry.title || "")}</p>
+          <p class="job-company">${escapeHtml(entry.subtitle || "")}</p>
+          <p class="job-dates">${escapeHtml(entry.year || "")}</p>
+        </div>
+      </article>
+    `;
+
+    fetch("resume-data.json")
+      .then(response => response.json())
+      .then(data => {
+        const profile = data.profile || {};
+
+        document.getElementById("resumePhoto").src = profile.photo || "";
+        document.getElementById("resumeName").textContent = profile.name || "";
+        document.getElementById("resumeContact").textContent = [
+          profile.location,
+          profile.phone,
+          profile.email
+        ].filter(Boolean).join(" | ");
+
+        const educationList = document.getElementById("educationList");
+        educationList.innerHTML = (data.education || [])
+          .map((entry, index) => buildDetailCard(entry, index === 0))
+          .join("");
+
+        const skillsList = document.getElementById("skillsList");
+        skillsList.innerHTML = (data.skills || [])
+          .map(skill => `<li>${escapeHtml(skill)}</li>`)
+          .join("");
+
+        const experienceList = document.getElementById("experienceList");
+        experienceList.innerHTML = (data.experience || [])
+          .map((entry, index) => buildDetailCard(entry, index === 0))
+          .join("");
+
+        const awardsList = document.getElementById("awardsList");
+        awardsList.innerHTML = (data.awards || [])
+          .map(buildAwardCard)
+          .join("");
+
+        [
+          ["educationSection", data.education],
+          ["skillsSection", data.skills],
+          ["experienceSection", data.experience],
+          ["awardsSection", data.awards]
+        ].forEach(([id, list]) => {
+          if (!Array.isArray(list) || !list.length) {
+            document.getElementById(id)?.remove();
+          }
+        });
+      })
+      .catch(() => {
+        document.body.insertAdjacentHTML(
+          "beforeend",
+          '<p class="resume-load-error">Unable to load resume data file.</p>'
+        );
+      });
+  </script>
+</body>
+</html>
