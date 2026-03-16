@@ -114,45 +114,10 @@
     }
 
     function downloadVCard() {
-      const addr = profile.address || {};
-      const nameParts = profile.name.split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || "";
-
-      const lines = [
-        "BEGIN:VCARD",
-        "VERSION:3.0",
-        `N:${lastName};${firstName};;;`,
-        `FN:${profile.name}`,
-        profile.company ? `ORG:${profile.company}` : null,
-        profile.title   ? `TITLE:${profile.title}` : null,
-        profile.phone   ? `TEL;TYPE=CELL:${profile.phone}` : null,
-        profile.email   ? `EMAIL;TYPE=WORK:${profile.email}` : null,
-        profile.website ? `URL:${profile.website}` : null,
-        (addr.line1 || addr.city) ? `ADR;TYPE=WORK:;;${addr.line1 || ""};${addr.city || ""};${addr.state || ""};${addr.zip || ""};${addr.country || ""}` : null,
-        "END:VCARD"
-      ].filter(Boolean).join("\r\n");
-
-      const filename = profile.name.replace(/\s+/g, "_") + ".vcf";
-      const file = new File([lines], filename, { type: "text/vcard" });
-
-      // Web Share API with file works natively on iOS Safari and Android Chrome —
-      // the OS share sheet lets the user pick Contacts directly.
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        navigator.share({ files: [file] }).catch(() => {});
-        return;
-      }
-
-      // Fallback: trigger a download (desktop browsers, older Android)
-      const blob = new Blob([lines], { type: "text/vcard;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Navigate to the static .vcf file — works on iOS, Android, and desktop.
+      // iOS Safari and Android both handle text/vcard natively and open the
+      // "Add to Contacts" dialog. Desktop browsers download the file.
+      window.location.href = "mason_henderson.vcf";
     }
 
     function openResumePage() {
@@ -276,6 +241,38 @@
 
         if (!document.querySelector(".social-icons a")) {
           socialsWrapper?.remove();
+        }
+
+        // macOS Dock magnification effect
+        const dockEl = document.querySelector(".social-icons");
+        const dockItems = dockEl ? [...dockEl.querySelectorAll("a")] : [];
+
+        if (dockItems.length > 1) {
+          const MAX_SCALE = 1.75;
+          const INFLUENCE = 90; // px radius of effect
+
+          dockEl.addEventListener("mousemove", e => {
+            dockItems.forEach(item => {
+              const rect = item.getBoundingClientRect();
+              const center = rect.left + rect.width / 2;
+              const signedDist = center - e.clientX;
+              const absDist = Math.abs(signedDist);
+
+              if (absDist < INFLUENCE) {
+                const t = 1 - absDist / INFLUENCE;
+                const scale = 1 + (MAX_SCALE - 1) * Math.pow(t, 1.5);
+                const pushX = Math.sign(signedDist) * 10 * t;
+                item.style.transform =
+                  `translateX(${pushX.toFixed(1)}px) scale(${scale.toFixed(3)})`;
+              } else {
+                item.style.transform = "";
+              }
+            });
+          });
+
+          dockEl.addEventListener("mouseleave", () => {
+            dockItems.forEach(item => { item.style.transform = ""; });
+          });
         }
 
         // QR code
