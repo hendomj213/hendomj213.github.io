@@ -376,6 +376,20 @@ body {
   cursor: pointer;
 }
 
+.share-settings {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  text-decoration: none;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.share-settings:hover { opacity: 1; }
+
 .qr-wrapper {
   margin: 18px auto 10px;
   width: 240px;

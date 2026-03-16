@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Admin — Mason Henderson</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ── Gate ─────────────────────────────────────────── -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-icon">🔒</div>
+    <h2>Admin Panel</h2>
+    <p class="gate-hint" id="gateHint">Enter your password to unlock the editor.</p>
+    <input id="pwInput" class="field-input" type="password" placeholder="Password" autocomplete="off">
+    <div id="patFieldWrap" style="display:none;margin-top:8px">
+      <p class="gate-hint" style="margin:0 0 8px">First-time setup: also enter your GitHub PAT (<code>repo</code> scope).</p>
+      <input id="patField" class="field-input" type="password" placeholder="ghp_…" autocomplete="off">
+    </div>
+    <div id="gateError" class="error-text"></div>
+    <button class="btn-primary" onclick="unlock()">Unlock Editor</button>
+    <div style="margin-top:14px">
+      <button class="btn-icon" style="font-size:0.78rem;color:var(--text-muted)" onclick="resetSetup()">Reset / change PAT</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Top Bar ──────────────────────────────────────── -->
+<div id="topBar" style="display:none">
+  <div><span class="topbar-title">🔧 Admin Panel</span></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center">
+    <a class="btn-secondary" href="index.html" target="_blank" rel="noopener">View Site ↗</a>
+    <button id="btnSave" class="btn-primary" onclick="saveAll()">Save All</button>
+  </div>
+</div>
+
+<!-- ── Layout ───────────────────────────────────────── -->
+<div id="layout" style="display:none">
+  <nav id="sidebar">
+    <div class="nav-item active"  data-section="profile"    onclick="setSection('profile')">Profile</div>
+    <div class="nav-item"         data-section="summary"    onclick="setSection('summary')">Summary</div>
+    <div class="nav-item"         data-section="experience" onclick="setSection('experience')">Experience</div>
+    <div class="nav-item"         data-section="education"  onclick="setSection('education')">Education</div>
+    <div class="nav-item"         data-section="skills"     onclick="setSection('skills')">Skills</div>
+    <div class="nav-item"         data-section="awards"     onclick="setSection('awards')">Awards</div>
+  </nav>
+  <main id="mainContent"></main>
+</div>
+
+<!-- ── Toast ────────────────────────────────────────── -->
+<div id="toast" style="display:none" onclick="hideToast()"></div>
+
+<script>
+// ── Constants ────────────────────────────────────────
+const REPO_OWNER = "hendomj213";
+const REPO_NAME  = "hendomj213.github.io";
+const BRANCH     = "main";
+
+// ── State ────────────────────────────────────────────
+let state  = {};
+let shas   = { json: null, vcf: null };
+let pat    = "";
+let dirty  = false;
+let active = "profile";
+
+// ── Utilities ────────────────────────────────────────
+const escHtml = s => String(s ?? "")
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+  .replace(/'/g, "&#39;");
+
+const escAttr = escHtml;
+
+const toB64 = str => btoa(unescape(encodeURIComponent(str)));
+
+function arrayMove(arr, i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+}
+
+// ── XOR encode/decode (symmetric) ────────────────────
+function xorStr(str, key) {
+  return [...str].map((c, i) =>
+    String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+  ).join("");
+}
+
+// ── Toast ────────────────────────────────────────────
+let toastTimer;
+
+function showToast(msg, type, persist) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = `toast-${type}`;
+  el.style.display = "block";
+  clearTimeout(toastTimer);
+  if (!persist) toastTimer = setTimeout(hideToast, 4000);
+}
+
+function hideToast() {
+  document.getElementById("toast").style.display = "none";
+}
+
+// ── GitHub API ───────────────────────────────────────
+async function ghGet(path) {
+  const res = await fetch(
+    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`,
+    { headers: { Authorization: `token ${pat}`, Accept: "application/vnd.github.v3+json" } }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw Object.assign(new Error(body.message || res.statusText), { status: res.status });
+  }
+  return res.json();
+}
+
+async function ghPut(path, content, sha, message) {
+  const res = await fetch(
+    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `token ${pat}`,
+        Accept: "application/vnd.github.v3+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message, content: toB64(content), sha, branch: BRANCH })
+    }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw Object.assign(new Error(body.message || res.statusText), { status: res.status });
+  }
+  return res.json();
+}
+
+// ── VCF Builder ──────────────────────────────────────
+function buildVcf(p) {
+  const addr  = p.address || {};
+  const parts = (p.name || "").trim().split(/\s+/);
+  const first = parts[0] || "";
+  const last  = parts.slice(1).join(" ");
+  return [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+    `N:${last};${first};;;`,
+    `FN:${p.name || ""}`,
+    p.company ? `ORG:${p.company}` : null,
+    p.title   ? `TITLE:${p.title}` : null,
+    p.phone   ? `TEL;TYPE=CELL:${p.phone}` : null,
+    p.email   ? `EMAIL;TYPE=WORK:${p.email}` : null,
+    p.website ? `URL:${p.website}` : null,
+    `ADR;TYPE=WORK:;;${addr.line1||""};${addr.city||""};${addr.state||""};${addr.zip||""};${addr.country||""}`,
+    "END:VCARD"
+  ].filter(Boolean).join("\r\n") + "\r\n";
+}
+
+// ── Gate / Unlock ────────────────────────────────────
+function showGateError(msg) {
+  document.getElementById("gateError").textContent = msg;
+}
+
+function resetSetup() {
+  localStorage.removeItem("admin_enc");
+  document.getElementById("patFieldWrap").style.display = "";
+  document.getElementById("gateHint").textContent = "Enter your password to unlock the editor.";
+  showGateError("");
+}
+
+async function unlock() {
+  const pw = document.getElementById("pwInput").value;
+  if (!pw) { showGateError("Please enter your password."); return; }
+
+  const enc = localStorage.getItem("admin_enc");
+
+  if (enc) {
+    // Decode stored PAT using the password
+    const decoded = xorStr(atob(enc), pw);
+    if (!decoded.startsWith("ghp_") && !decoded.startsWith("github_pat_")) {
+      showGateError("Wrong password.");
+      return;
+    }
+    pat = decoded;
+  } else {
+    // First-time setup: need PAT too
+    const rawPat = document.getElementById("patField").value.trim();
+    if (!rawPat) { showGateError("Enter your GitHub PAT to complete first-time setup."); return; }
+    pat = rawPat;
+  }
+
+  showGateError("Verifying…");
+  try {
+    await ghGet("resume-data.json");
+  } catch (err) {
+    if (err.status === 401) {
+      if (!enc) {
+        showGateError("Invalid PAT — check permissions (repo scope required).");
+      } else {
+        localStorage.removeItem("admin_enc");
+        showGateError("PAT expired or revoked — click \"Reset / change PAT\" to re-enter it.");
+      }
+    } else {
+      showGateError("Error: " + err.message);
+    }
+    return;
+  }
+
+  // Save encoded PAT on first-time setup
+  if (!enc) {
+    localStorage.setItem("admin_enc", btoa(xorStr(pat, pw)));
+  }
+
+  sessionStorage.setItem("admin_pat", pat);
+  showApp();
+  await loadData();
+}
+
+document.getElementById("pwInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") unlock();
+});
+document.getElementById("patField").addEventListener("keydown", e => {
+  if (e.key === "Enter") unlock();
+});
+
+function showApp() {
+  document.getElementById("gate").style.display  = "none";
+  document.getElementById("topBar").style.display = "";
+  document.getElementById("layout").style.display = "";
+}
+
+function hideApp() {
+  document.getElementById("gate").style.display  = "";
+  document.getElementById("topBar").style.display = "none";
+  document.getElementById("layout").style.display = "none";
+}
+
+// ── Load Data ────────────────────────────────────────
+async function loadData() {
+  document.getElementById("mainContent").innerHTML =
+    '<p style="padding:20px;color:var(--text-muted)">Loading data…</p>';
+  try {
+    const [data, jsonMeta, vcfMeta] = await Promise.all([
+      fetch("resume-data.json").then(r => r.json()),
+      ghGet("resume-data.json"),
+      ghGet("mason_henderson.vcf")
+    ]);
+    state      = structuredClone(data);
+    shas.json  = jsonMeta.sha;
+    shas.vcf   = vcfMeta.sha;
+    dirty      = false;
+    // Ensure nested objects exist
+    state.profile         = state.profile         || {};
+    state.profile.address = state.profile.address || {};
+    state.profile.socials = state.profile.socials || {};
+    state.profile.images  = state.profile.images  || {};
+    state.experience      = state.experience      || [];
+    state.education       = state.education       || [];
+    state.skills          = state.skills          || [];
+    state.awards          = state.awards          || [];
+    renderActive();
+  } catch (err) {
+    if (err.status === 401) {
+      pat = "";
+      sessionStorage.removeItem("admin_pat");
+      hideApp();
+      showGateError("Session expired — please re-enter your PAT.");
+    } else {
+      document.getElementById("mainContent").innerHTML =
+        `<p style="padding:20px;color:#f87171">Failed to load data: ${escHtml(err.message)}</p>`;
+    }
+  }
+}
+
+// ── Save All ─────────────────────────────────────────
+async function saveAll() {
+  showToast("Saving… do not close tab", "saving", true);
+  document.getElementById("btnSave").disabled = true;
+  try {
+    const date = new Date().toISOString().slice(0, 10);
+    const [jsonRes, vcfRes] = await Promise.all([
+      ghPut("resume-data.json",    JSON.stringify(state, null, 2), shas.json, `Admin: update resume-data.json (${date})`),
+      ghPut("mason_henderson.vcf", buildVcf(state.profile || {}),  shas.vcf,  `Admin: update mason_henderson.vcf (${date})`)
+    ]);
+    shas.json = jsonRes.content.sha;
+    shas.vcf  = vcfRes.content.sha;
+    dirty     = false;
+    showToast("Saved! Site updates in ~30 seconds.", "success");
+  } catch (err) {
+    let msg = `Save failed: ${err.message}`;
+    if (err.status === 401) msg = "Authentication failed — check your GitHub PAT.";
+    if (err.status === 409) msg = "Conflict — reload to refresh file state, then re-save.";
+    showToast(msg, "error", true);
+  }
+  document.getElementById("btnSave").disabled = false;
+}
+
+// ── Navigation ───────────────────────────────────────
+function setSection(name) {
+  active = name;
+  document.querySelectorAll(".nav-item").forEach(el =>
+    el.classList.toggle("active", el.dataset.section === name)
+  );
+  renderActive();
+}
+
+function renderActive() {
+  ({ profile: renderProfile, summary: renderSummary,
+     experience: renderExperience, education: renderEducation,
+     skills: renderSkills, awards: renderAwards }[active] || (() => {}))();
+}
+
+// ── Render: Profile ──────────────────────────────────
+function renderProfile() {
+  const p   = state.profile;
+  const a   = p.address;
+  const s   = p.socials;
+  const img = p.images;
+
+  const f = (label, expr, val, wide) => `
+    <label class="field-label${wide ? " wide" : ""}">
+      ${label}
+      <input class="field-input" value="${escAttr(val)}"
+        oninput="${expr}=this.value;dirty=true;">
+    </label>`;
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section">
+      <h2>Profile</h2>
+
+      <div class="field-group">
+        <p class="group-title">Identity</p>
+        <div class="field-grid">
+          ${f("Name",    "state.profile.name",    p.name)}
+          ${f("Title",   "state.profile.title",   p.title)}
+          ${f("Company", "state.profile.company", p.company)}
+        </div>
+      </div>
+
+      <div class="field-group">
+        <p class="group-title">Contact</p>
+        <div class="field-grid">
+          ${f("Work Email",     "state.profile.email",         p.email)}
+          ${f("Personal Email", "state.profile.personalEmail", p.personalEmail)}
+          ${f("Phone",          "state.profile.phone",         p.phone)}
+          ${f("Website",        "state.profile.website",       p.website)}
+        </div>
+      </div>
+
+      <div class="field-group">
+        <p class="group-title">Address</p>
+        <div class="field-grid">
+          ${f("Line 1",  "state.profile.address.line1",   a.line1)}
+          ${f("Line 2",  "state.profile.address.line2",   a.line2)}
+          ${f("City",    "state.profile.address.city",    a.city)}
+          ${f("State",   "state.profile.address.state",   a.state)}
+          ${f("Zip",     "state.profile.address.zip",     a.zip)}
+          ${f("Country", "state.profile.address.country", a.country)}
+        </div>
+      </div>
+
+      <div class="field-group">
+        <p class="group-title">URLs</p>
+        <div class="field-grid">
+          ${f("Calendar URL",      "state.profile.calendarUrl", p.calendarUrl, true)}
+          ${f("Share URL",         "state.profile.shareUrl",    p.shareUrl,    true)}
+          ${f("Location Display",  "state.profile.location",    p.location,    true)}
+        </div>
+      </div>
+
+      <div class="field-group">
+        <p class="group-title">Images</p>
+        <div class="field-grid">
+          ${f("Headshot Filename", "state.profile.images.headshot", img.headshot)}
+          ${f("Logo Filename",     "state.profile.images.logo",     img.logo)}
+        </div>
+      </div>
+
+      <div class="field-group">
+        <p class="group-title">Socials</p>
+        <div class="field-grid">
+          ${f("LinkedIn",   "state.profile.socials.linkedin",   s.linkedin,   true)}
+          ${f("Facebook",   "state.profile.socials.facebook",   s.facebook,   true)}
+          ${f("Instagram",  "state.profile.socials.instagram",  s.instagram,  true)}
+          ${f("WhatsApp",   "state.profile.socials.whatsapp",   s.whatsapp,   true)}
+          ${f("Snapchat",   "state.profile.socials.snapchat",   s.snapchat,   true)}
+          ${f("Letterboxd", "state.profile.socials.letterboxd", s.letterboxd, true)}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Render: Summary ──────────────────────────────────
+function renderSummary() {
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section">
+      <h2>Professional Summary</h2>
+      <div class="field-group">
+        <label class="field-label wide">
+          Summary Text
+          <textarea class="field-input summary-textarea"
+            oninput="state.summary=this.value;dirty=true;">${escHtml(state.summary || "")}</textarea>
+        </label>
+      </div>
+    </div>`;
+}
+
+// ── Experience mutations ──────────────────────────────
+function expSet(ci, k, v)              { state.experience[ci][k] = v; dirty = true; }
+function expMove(ci, d)                { arrayMove(state.experience, ci, d); dirty = true; renderExperience(); }
+function expRemove(ci)                 { state.experience.splice(ci, 1); dirty = true; renderExperience(); }
+function expAdd()                      { state.experience.push({logo:"",logoAlt:"",organization:"",dates:"",companyDetails:[],roles:[]}); dirty = true; renderExperience(); }
+function expDetailSet(ci, di, v)       { state.experience[ci].companyDetails[di] = v; dirty = true; }
+function expDetailMove(ci, di, d)      { arrayMove(state.experience[ci].companyDetails, di, d); dirty = true; renderExperience(); }
+function expDetailRemove(ci, di)       { state.experience[ci].companyDetails.splice(di, 1); dirty = true; renderExperience(); }
+function expDetailAdd(ci)              { state.experience[ci].companyDetails.push(""); dirty = true; renderExperience(); }
+function expRoleSet(ci, ri, k, v)      { state.experience[ci].roles[ri][k] = v; dirty = true; }
+function expRoleMove(ci, ri, d)        { arrayMove(state.experience[ci].roles, ri, d); dirty = true; renderExperience(); }
+function expRoleRemove(ci, ri)         { state.experience[ci].roles.splice(ri, 1); dirty = true; renderExperience(); }
+function expRoleAdd(ci)                { state.experience[ci].roles.push({title:"",type:"",dates:"",details:[]}); dirty = true; renderExperience(); }
+function expRoleDetailSet(ci,ri,di,v)  { state.experience[ci].roles[ri].details[di] = v; dirty = true; }
+function expRoleDetailMove(ci,ri,di,d) { arrayMove(state.experience[ci].roles[ri].details, di, d); dirty = true; renderExperience(); }
+function expRoleDetailRemove(ci,ri,di) { state.experience[ci].roles[ri].details.splice(di, 1); dirty = true; renderExperience(); }
+function expRoleDetailAdd(ci, ri)      { state.experience[ci].roles[ri].details.push(""); dirty = true; renderExperience(); }
+
+// ── Render: Experience ───────────────────────────────
+function renderExperience() {
+  const roleCard = (ci, role, ri) => `
+    <div class="editor-card nested">
+      <div class="editor-card-header">
+        <span class="editor-card-title">${escHtml(role.title || "New Role")}</span>
+        <div class="card-actions">
+          <button class="btn-icon" title="Up"     onclick="expRoleMove(${ci},${ri},-1)">▲</button>
+          <button class="btn-icon" title="Down"   onclick="expRoleMove(${ci},${ri},1)">▼</button>
+          <button class="btn-icon btn-danger" title="Remove" onclick="expRoleRemove(${ci},${ri})">✕</button>
+        </div>
+      </div>
+      <div class="field-grid">
+        <label class="field-label">Title
+          <input class="field-input" value="${escAttr(role.title||'')}"
+            oninput="expRoleSet(${ci},${ri},'title',this.value)">
+        </label>
+        <label class="field-label">Type
+          <input class="field-input" value="${escAttr(role.type||'')}"
+            oninput="expRoleSet(${ci},${ri},'type',this.value)">
+        </label>
+        <label class="field-label wide">Dates
+          <input class="field-input" value="${escAttr(role.dates||'')}"
+            oninput="expRoleSet(${ci},${ri},'dates',this.value)">
+        </label>
+      </div>
+      <div class="subheading">Bullet Points</div>
+      ${(role.details||[]).map((d,di) => `
+        <div class="list-item">
+          <input class="field-input" value="${escAttr(d)}"
+            oninput="expRoleDetailSet(${ci},${ri},${di},this.value)">
+          <button class="btn-icon" title="Up"     onclick="expRoleDetailMove(${ci},${ri},${di},-1)">▲</button>
+          <button class="btn-icon" title="Down"   onclick="expRoleDetailMove(${ci},${ri},${di},1)">▼</button>
+          <button class="btn-icon btn-danger" title="Remove" onclick="expRoleDetailRemove(${ci},${ri},${di})">✕</button>
+        </div>`).join("")}
+      <button class="btn-add" onclick="expRoleDetailAdd(${ci},${ri})">+ Add bullet</button>
+    </div>`;
+
+  const companyCard = (entry, ci) => `
+    <div class="editor-card">
+      <div class="editor-card-header">
+        <span class="editor-card-title">${escHtml(entry.organization || "New Company")}</span>
+        <div class="card-actions">
+          <button class="btn-icon" title="Up"     onclick="expMove(${ci},-1)">▲</button>
+          <button class="btn-icon" title="Down"   onclick="expMove(${ci},1)">▼</button>
+          <button class="btn-icon btn-danger" title="Remove" onclick="expRemove(${ci})">✕</button>
+        </div>
+      </div>
+      <div class="field-grid">
+        <label class="field-label">Organization
+          <input class="field-input" value="${escAttr(entry.organization||'')}"
+            oninput="expSet(${ci},'organization',this.value)">
+        </label>
+        <label class="field-label">Dates
+          <input class="field-input" value="${escAttr(entry.dates||'')}"
+            oninput="expSet(${ci},'dates',this.value)">
+        </label>
+        <label class="field-label">Logo File
+          <input class="field-input" value="${escAttr(entry.logo||'')}"
+            oninput="expSet(${ci},'logo',this.value)">
+        </label>
+        <label class="field-label">Logo Alt Text
+          <input class="field-input" value="${escAttr(entry.logoAlt||'')}"
+            oninput="expSet(${ci},'logoAlt',this.value)">
+        </label>
+      </div>
+      <div class="subheading">Company Overview Bullets</div>
+      ${(entry.companyDetails||[]).map((d,di) => `
+        <div class="list-item">
+          <input class="field-input" value="${escAttr(d)}"
+            oninput="expDetailSet(${ci},${di},this.value)">
+          <button class="btn-icon" title="Up"     onclick="expDetailMove(${ci},${di},-1)">▲</button>
+          <button class="btn-icon" title="Down"   onclick="expDetailMove(${ci},${di},1)">▼</button>
+          <button class="btn-icon btn-danger" title="Remove" onclick="expDetailRemove(${ci},${di})">✕</button>
+        </div>`).join("")}
+      <button class="btn-add" onclick="expDetailAdd(${ci})">+ Add overview bullet</button>
+      <div class="subheading" style="margin-top:20px">Roles</div>
+      ${(entry.roles||[]).map((role, ri) => roleCard(ci, role, ri)).join("")}
+      <button class="btn-add btn-add-primary" onclick="expRoleAdd(${ci})">+ Add Role</button>
+    </div>`;
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section">
+      <h2>Work Experience</h2>
+      ${(state.experience||[]).map((e, ci) => companyCard(e, ci)).join("")}
+      <button class="btn-add btn-add-primary" onclick="expAdd()">+ Add Company</button>
+    </div>`;
+}
+
+// ── Education mutations ───────────────────────────────
+function eduSet(i, k, v)      { state.education[i][k] = v; dirty = true; }
+function eduMove(i, d)         { arrayMove(state.education, i, d); dirty = true; renderEducation(); }
+function eduRemove(i)          { state.education.splice(i, 1); dirty = true; renderEducation(); }
+function eduAdd()              { state.education.push({logo:"",logoAlt:"",title:"",organization:"",dates:"",details:[]}); dirty = true; renderEducation(); }
+function eduDetailSet(i,di,v)  { state.education[i].details[di] = v; dirty = true; }
+function eduDetailMove(i,di,d) { arrayMove(state.education[i].details, di, d); dirty = true; renderEducation(); }
+function eduDetailRemove(i,di) { state.education[i].details.splice(di, 1); dirty = true; renderEducation(); }
+function eduDetailAdd(i)       { state.education[i].details.push(""); dirty = true; renderEducation(); }
+
+// ── Render: Education ────────────────────────────────
+function renderEducation() {
+  const eduCard = (entry, i) => `
+    <div class="editor-card">
+      <div class="editor-card-header">
+        <span class="editor-card-title">${escHtml(entry.organization || "New Institution")}</span>
+        <div class="card-actions">
+          <button class="btn-icon" title="Up"     onclick="eduMove(${i},-1)">▲</button>
+          <button class="btn-icon" title="Down"   onclick="eduMove(${i},1)">▼</button>
+          <button class="btn-icon btn-danger" title="Remove" onclick="eduRemove(${i})">✕</button>
+        </div>
+      </div>
+      <div class="field-grid">
+        <label class="field-label">Organization
+          <input class="field-input" value="${escAttr(entry.organization||'')}"
+            oninput="eduSet(${i},'organization',this.value)">
+        </label>
+        <label class="field-label">Dates
+          <input class="field-input" value="${escAttr(entry.dates||'')}"
+            oninput="eduSet(${i},'dates',this.value)">
+        </label>
+        <label class="field-label wide">Title / Degree
+          <input class="field-input" value="${escAttr(entry.title||'')}"
+            oninput="eduSet(${i},'title',this.value)">
+        </label>
+        <label class="field-label">Logo File
+          <input class="field-input" value="${escAttr(entry.logo||'')}"
+            oninput="eduSet(${i},'logo',this.value)">
+        </label>
+        <label class="field-label">Logo Alt Text
+          <input class="field-input" value="${escAttr(entry.logoAlt||'')}"
+            oninput="eduSet(${i},'logoAlt',this.value)">
+        </label>
+      </div>
+      <div class="subheading">Details</div>
+      ${(entry.details||[]).map((d,di) => `
+        <div class="list-item">
+          <input class="field-input" value="${escAttr(d)}"
+            oninput="eduDetailSet(${i},${di},this.value)">
+          <button class="btn-icon" title="Up"     onclick="eduDetailMove(${i},${di},-1)">▲</button>
+          <button class="btn-icon" title="Down"   onclick="eduDetailMove(${i},${di},1)">▼</button>
+          <button class="btn-icon btn-danger" title="Remove" onclick="eduDetailRemove(${i},${di})">✕</button>
+        </div>`).join("")}
+      <button class="btn-add" onclick="eduDetailAdd(${i})">+ Add detail</button>
+    </div>`;
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section">
+      <h2>Education</h2>
+      ${(state.education||[]).map((e, i) => eduCard(e, i)).join("")}
+      <button class="btn-add btn-add-primary" onclick="eduAdd()">+ Add Institution</button>
+    </div>`;
+}
+
+// ── Skills mutations ─────────────────────────────────
+function skillCatSet(ci, v)      { state.skills[ci].category = v; dirty = true; }
+function skillCatMove(ci, d)     { arrayMove(state.skills, ci, d); dirty = true; renderSkills(); }
+function skillCatRemove(ci)      { state.skills.splice(ci, 1); dirty = true; renderSkills(); }
+function skillCatAdd()           { state.skills.push({category:"",items:[""]}); dirty = true; renderSkills(); }
+function skillItemSet(ci,ii,v)   { state.skills[ci].items[ii] = v; dirty = true; }
+function skillItemMove(ci,ii,d)  { arrayMove(state.skills[ci].items, ii, d); dirty = true; renderSkills(); }
+function skillItemRemove(ci,ii)  { state.skills[ci].items.splice(ii, 1); dirty = true; renderSkills(); }
+function skillItemAdd(ci)        { state.skills[ci].items.push(""); dirty = true; renderSkills(); }
+
+// ── Render: Skills ───────────────────────────────────
+function renderSkills() {
+  const catCard = (cat, ci) => `
+    <div class="editor-card">
+      <div class="editor-card-header">
+        <span class="editor-card-title">${escHtml(cat.category || "New Category")}</span>
+        <div class="card-actions">
+          <button class="btn-icon" title="Up"     onclick="skillCatMove(${ci},-1)">▲</button>
+          <button class="btn-icon" title="Down"   onclick="skillCatMove(${ci},1)">▼</button>
+          <button class="btn-icon btn-danger" title="Remove" onclick="skillCatRemove(${ci})">✕</button>
+        </div>
+      </div>
+      <label class="field-label" style="margin-bottom:12px">
+        Category Name
+        <input class="field-input" value="${escAttr(cat.category||'')}"
+          oninput="skillCatSet(${ci},this.value)">
+      </label>
+      <div class="subheading">Items</div>
+      ${(cat.items||[]).map((item,ii) => `
+        <div class="list-item">
+          <input class="field-input" value="${escAttr(item)}"
+            oninput="skillItemSet(${ci},${ii},this.value)">
+          <button class="btn-icon" title="Up"     onclick="skillItemMove(${ci},${ii},-1)">▲</button>
+          <button class="btn-icon" title="Down"   onclick="skillItemMove(${ci},${ii},1)">▼</button>
+          <button class="btn-icon btn-danger" title="Remove" onclick="skillItemRemove(${ci},${ii})">✕</button>
+        </div>`).join("")}
+      <button class="btn-add" onclick="skillItemAdd(${ci})">+ Add item</button>
+    </div>`;
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section">
+      <h2>Technical Skills</h2>
+      ${(state.skills||[]).map((cat, ci) => catCard(cat, ci)).join("")}
+      <button class="btn-add btn-add-primary" onclick="skillCatAdd()">+ Add Category</button>
+    </div>`;
+}
+
+// ── Awards mutations ─────────────────────────────────
+function awardSet(i, k, v) { state.awards[i][k] = v; dirty = true; }
+function awardMove(i, d)   { arrayMove(state.awards, i, d); dirty = true; renderAwards(); }
+function awardRemove(i)    { state.awards.splice(i, 1); dirty = true; renderAwards(); }
+function awardAdd()        { state.awards.push({logo:"",logoAlt:"",title:"",subtitle:"",year:""}); dirty = true; renderAwards(); }
+
+// ── Render: Awards ───────────────────────────────────
+function renderAwards() {
+  const awardCard = (award, i) => `
+    <div class="editor-card">
+      <div class="editor-card-header">
+        <span class="editor-card-title">${escHtml(award.title || "New Award")}</span>
+        <div class="card-actions">
+          <button class="btn-icon" title="Up"     onclick="awardMove(${i},-1)">▲</button>
+          <button class="btn-icon" title="Down"   onclick="awardMove(${i},1)">▼</button>
+          <button class="btn-icon btn-danger" title="Remove" onclick="awardRemove(${i})">✕</button>
+        </div>
+      </div>
+      <div class="field-grid">
+        <label class="field-label">Title
+          <input class="field-input" value="${escAttr(award.title||'')}"
+            oninput="awardSet(${i},'title',this.value)">
+        </label>
+        <label class="field-label">Year
+          <input class="field-input" value="${escAttr(award.year||'')}"
+            oninput="awardSet(${i},'year',this.value)">
+        </label>
+        <label class="field-label wide">Subtitle
+          <input class="field-input" value="${escAttr(award.subtitle||'')}"
+            oninput="awardSet(${i},'subtitle',this.value)">
+        </label>
+        <label class="field-label">Logo File
+          <input class="field-input" value="${escAttr(award.logo||'')}"
+            oninput="awardSet(${i},'logo',this.value)">
+        </label>
+        <label class="field-label">Logo Alt Text
+          <input class="field-input" value="${escAttr(award.logoAlt||'')}"
+            oninput="awardSet(${i},'logoAlt',this.value)">
+        </label>
+      </div>
+    </div>`;
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section">
+      <h2>Awards &amp; Certifications</h2>
+      ${(state.awards||[]).map((award, i) => awardCard(award, i)).join("")}
+      <button class="btn-add btn-add-primary" onclick="awardAdd()">+ Add Award</button>
+    </div>`;
+}
+
+// ── Dirty warning ────────────────────────────────────
+window.addEventListener("beforeunload", e => {
+  if (dirty) { e.preventDefault(); e.returnValue = ""; }
+});
+
+// ── Init ─────────────────────────────────────────────
+(function init() {
+  const saved = sessionStorage.getItem("admin_pat");
+  if (saved) { pat = saved; showApp(); loadData(); return; }
+
+  // Show PAT field if no encrypted PAT is stored yet (first-time setup)
+  if (!localStorage.getItem("admin_enc")) {
+    document.getElementById("patFieldWrap").style.display = "";
+    document.getElementById("gateHint").textContent =
+      "First-time setup: enter your password and GitHub PAT. After this, just your password.";
+  }
+})();
+</script>
+</body>
+</html>
