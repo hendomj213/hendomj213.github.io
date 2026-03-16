@@ -31,9 +31,21 @@
 <div id="topBar" style="display:none">
   <div><span class="topbar-title">🔧 Admin Panel</span></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center">
+    <button class="btn-secondary" onclick="togglePatPopover()" title="Update PAT">🔑</button>
     <a class="btn-secondary" href="index.html" target="_blank" rel="noopener">View Site ↗</a>
     <button id="btnSave" class="btn-primary" onclick="saveAll()">Save All</button>
   </div>
+</div>
+
+<!-- ── PAT Update Popover ────────────────────────────── -->
+<div id="patPopover" style="display:none;position:fixed;top:56px;right:16px;z-index:50;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:18px;width:min(90vw,320px);box-shadow:0 8px 32px rgba(0,0,0,0.5)">
+  <p style="margin:0 0 10px;font-size:0.85rem;color:var(--text-muted)">Enter a new GitHub PAT to replace the stored one:</p>
+  <input id="newPatInput" class="field-input" type="password" placeholder="ghp_…" autocomplete="off">
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <button class="btn-primary" style="flex:1" onclick="saveNewPat()">Save PAT</button>
+    <button class="btn-secondary" onclick="togglePatPopover()">Cancel</button>
+  </div>
+  <div id="patPopoverMsg" style="font-size:0.8rem;margin-top:8px;min-height:1.2em"></div>
 </div>
 
 <!-- ── Layout ───────────────────────────────────────── -->
@@ -163,6 +175,47 @@ function showGateError(msg) {
   document.getElementById("gateError").textContent = msg;
 }
 
+function togglePatPopover() {
+  const el = document.getElementById("patPopover");
+  const open = el.style.display !== "none";
+  el.style.display = open ? "none" : "";
+  if (!open) {
+    document.getElementById("newPatInput").value = "";
+    document.getElementById("patPopoverMsg").textContent = "";
+    document.getElementById("newPatInput").focus();
+  }
+}
+
+async function saveNewPat() {
+  const newPat = document.getElementById("newPatInput").value.trim();
+  const msg    = document.getElementById("patPopoverMsg");
+  if (!newPat) { msg.style.color = "#f87171"; msg.textContent = "Please enter a PAT."; return; }
+
+  msg.style.color = "var(--text-muted)";
+  msg.textContent = "Verifying…";
+
+  const savedPat = pat;
+  pat = newPat;
+  try {
+    await ghGet("resume-data.json");
+  } catch (err) {
+    pat = savedPat;
+    msg.style.color = "#f87171";
+    msg.textContent = err.status === 401
+      ? "Invalid PAT — check permissions."
+      : "Error: " + err.message;
+    return;
+  }
+
+  const pw = sessionStorage.getItem("admin_pw");
+  if (pw) localStorage.setItem("admin_enc", btoa(xorStr(newPat, pw)));
+  sessionStorage.setItem("admin_pat", newPat);
+
+  msg.style.color = "#4ade80";
+  msg.textContent = "PAT updated successfully.";
+  setTimeout(togglePatPopover, 1200);
+}
+
 function resetSetup() {
   localStorage.removeItem("admin_enc");
   document.getElementById("patFieldWrap").style.display = "";
@@ -214,6 +267,7 @@ async function unlock() {
   }
 
   sessionStorage.setItem("admin_pat", pat);
+  sessionStorage.setItem("admin_pw", pw);
   showApp();
   await loadData();
 }
