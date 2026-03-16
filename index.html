@@ -77,210 +77,21 @@
   </div>
 
   <script>
-    const profile = {
-      name: "Mason Henderson",
-      title: "Director of Data & Financial Operations",
-      company: "Snooze Mattress + Wellness",
-
-      email: "mhenderson@snoozesleep.com",
-      phone: "+17192147729",
-      website: "https://snoozemattresscompany.com",
-
-      address_line_1: "Remote",
-      address_line_2: "",
-      city: "Amarillo",
-      state: "TX",
-      zip: "",
-      country: "",
-
-      calendarUrl: "https://calendar.google.com/appointments/schedules/AcZssZ1Sy1NJqDkSxb78sHIjUj8vk8qJQCKeXpL73XVyg60FHlyQdCgXPvlsYaVt1ogdII6ol3OC0521",
-
-      images: {
-        headshot: "headshot-ai.png",
-        logo: "snooze-logo.png"
-      },
-
-      socials: {
-        linkedin: "https://linkedin.com/in/mason-j-henderson",
-        facebook: "https://facebook.com/profile.php?id=61551319502785",
-        instagram: "https://instagram.com/hendomj213/",
-        whatsapp: "https://wa.me/17192147729",
-        snapchat: "https://snapchat.com/add/mason_damaster",
-        letterboxd: "https://letterboxd.com/Mason_Henderson/"
-      },
-
-      shareUrl: "https://hendomj213.github.io/"
-    };
-
-    const resumeUrl = "resume.html";
+    let profile = {};
 
     function formatPhone(phone) {
       const digits = phone.replace(/\D/g, "");
       const country = digits.length === 11 ? digits[0] : "1";
       const offset = digits.length === 11 ? 1 : 0;
-
       return `+${country} (${digits.slice(offset, offset + 3)}) ${digits.slice(offset + 3, offset + 6)}-${digits.slice(offset + 6, offset + 10)}`;
     }
 
-    const removeIfEmpty = (el, value) => {
-      if (!value) el?.remove();
-      return Boolean(value);
-    };
-
-    // Basic info
-    document.getElementById("name").textContent = profile.name;
-    document.getElementById("title").textContent = profile.title;
-    document.getElementById("company").textContent = profile.company;
-
-    document.getElementById("headshot").src = profile.images.headshot;
-    document.getElementById("companyLogo").src = profile.images.logo;
-
-    // Contact items
-    const emailEl = document.getElementById("email");
-
-    if (profile.email) {
-      emailEl.href = `mailto:${profile.email}`;
-      emailEl.innerHTML = `
-        <img src="email.svg" class="item-icon" alt="Email">
-        <span class="item-text">${profile.email}</span>
-      `;
-    } else {
-      emailEl.remove();
-    }
-
-    const phoneEl = document.getElementById("phone");
-
-    if (profile.phone) {
-      phoneEl.href = `tel:${profile.phone}`;
-      phoneEl.innerHTML = `
-        <img src="phone.svg" class="item-icon" alt="Phone">
-        <span class="item-text">${formatPhone(profile.phone)}</span>
-      `;
-    } else {
-      phoneEl.remove();
-    }
-
-    const websiteEl = document.getElementById("website");
-
-    if (profile.website) {
-      websiteEl.href = profile.website;
-      websiteEl.innerHTML = `
-      <img src="website.svg" class="item-icon" alt="Website">
-      <span class="item-text">${profile.website.replace(/^https?:\/\//, "")}</span>
-      `;
-    } else {
-      websiteEl.remove();
-    }
-
-    const addressEl = document.getElementById("address");
-
-    // Build city/state/zip/country line
-    const cityLine = [
-      profile.city && `${profile.city}${profile.state ? "," : ""}`,
-      profile.state,
-      profile.zip,
-      profile.country
-    ].filter(Boolean).join(" ");
-
-    // Check for "Remote" (case-insensitive, trimmed)
-    const isRemote =
-      profile.address_line_1 &&
-      profile.address_line_1.trim().toLowerCase() === "remote";
-
-    if (isRemote && cityLine) {
-      // Display text
-      const remoteDisplay = `Remote - ${cityLine}`;
-
-      // Maps query (omit "Remote -")
-      const mapsQuery = cityLine;
-
-      addressEl.href =
-        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`;
-      addressEl.target = "_blank";
-      addressEl.rel = "noopener";
-
-      addressEl.innerHTML = `
-        <img src="address.svg" class="item-icon" alt="Address">
-        <span class="item-text">${remoteDisplay}</span>
-      `;
-    } else {
-      // Normal two-line address
-      const line1 = [
-        profile.address_line_1,
-        profile.address_line_2
-      ].filter(Boolean).join(" ");
-
-      if (line1 || cityLine) {
-        const fullAddress = [line1, cityLine].filter(Boolean).join(", ");
-
-        addressEl.href =
-          `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
-        addressEl.target = "_blank";
-        addressEl.rel = "noopener";
-
-        addressEl.innerHTML = `
-          <img src="address.svg" class="item-icon" alt="Address">
-          <span class="item-text">
-            ${line1 ? `<div>${line1}</div>` : ""}
-            ${cityLine ? `<div>${cityLine}</div>` : ""}
-          </span>
-        `;
-      } else {
-        addressEl.remove();
-      }
-    }
-
-    // Remove entire section if empty
-    if (!document.querySelector(".section .item")) {
-      document.querySelector(".section")?.remove();
-    }
-
-    // Calendar
-    const calendarBtn = document.getElementById("calendarBtn");
-    if (profile.calendarUrl) {
-      calendarBtn.addEventListener("click", () => {
-        window.open(profile.calendarUrl, "_blank", "noopener");
-      });
-    } else {
-      calendarBtn.remove();
-    }
-
-    // Socials (remove icons with no profile link)
-    const socialsWrapper = document.querySelector(".socials-wrapper");
-    const socialIcons = document.querySelectorAll(".social-icons a");
-    
-    socialIcons.forEach(icon => {
-      const key = icon.id.replace("social-", "");
-      const url = profile.socials[key];
-    
-      if (url) {
-        icon.href = url;
-        icon.target = "_blank";
-        icon.rel = "noopener";
-      } else {
-        icon.remove();
-      }
-    });
-    
-    // Remove socials section if nothing remains
-    if (!document.querySelector(".social-icons a")) {
-      socialsWrapper?.remove();
-    }
-
-
-    // QR
-    document.getElementById("qrImage").src =
-      `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(profile.shareUrl)}`;
-
-    // Share modal
-    const shareModal = document.getElementById("shareModal");
-
     function openShareModal() {
-      shareModal.classList.add("active");
+      document.getElementById("shareModal").classList.add("active");
     }
 
     function closeShareModal() {
-      shareModal.classList.remove("active");
+      document.getElementById("shareModal").classList.remove("active");
     }
 
     function shareProfile() {
@@ -298,43 +109,217 @@
       if (navigator.share) {
         navigator.share({ title: profile.name, text });
       } else {
-        location.href =
-          `mailto:?subject=${encodeURIComponent(profile.name + " Contact Information")}&body=${encodeURIComponent(text)}`;
+        location.href = `mailto:?subject=${encodeURIComponent(profile.name + " Contact Information")}&body=${encodeURIComponent(text)}`;
       }
     }
 
     function downloadVCard() {
-      const vCard = `
-  BEGIN:VCARD
-  VERSION:3.0
-  N:${profile.name.split(" ").reverse().join(";")};;;
-  FN:${profile.name}
-  ORG:${profile.company}
-  TITLE:${profile.title}
-  TEL;TYPE=CELL:${profile.phone || ""}
-  EMAIL;TYPE=WORK:${profile.email || ""}
-  URL:${profile.website || ""}
-  ADR;TYPE=WORK:;;${profile.address_line_1 || ""};${profile.city || ""};${profile.state || ""};${profile.zip || ""};${profile.country || ""}
-  END:VCARD
-      `.trim();
+      const addr = profile.address || {};
+      const nameParts = profile.name.split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
 
-      const blob = new Blob([vCard], { type: "text/vcard" });
+      const lines = [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        `N:${lastName};${firstName};;;`,
+        `FN:${profile.name}`,
+        profile.company ? `ORG:${profile.company}` : null,
+        profile.title   ? `TITLE:${profile.title}` : null,
+        profile.phone   ? `TEL;TYPE=CELL:${profile.phone}` : null,
+        profile.email   ? `EMAIL;TYPE=WORK:${profile.email}` : null,
+        profile.website ? `URL:${profile.website}` : null,
+        (addr.line1 || addr.city) ? `ADR;TYPE=WORK:;;${addr.line1 || ""};${addr.city || ""};${addr.state || ""};${addr.zip || ""};${addr.country || ""}` : null,
+        "END:VCARD"
+      ].filter(Boolean).join("\r\n");
+
+      const filename = profile.name.replace(/\s+/g, "_") + ".vcf";
+      const file = new File([lines], filename, { type: "text/vcard" });
+
+      // Web Share API with file works natively on iOS Safari and Android Chrome —
+      // the OS share sheet lets the user pick Contacts directly.
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        navigator.share({ files: [file] }).catch(() => {});
+        return;
+      }
+
+      // Fallback: trigger a download (desktop browsers, older Android)
+      const blob = new Blob([lines], { type: "text/vcard;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-
       a.href = url;
-      a.download = profile.name.replace(" ", "_") + ".vcf";
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
-
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
 
     function openResumePage() {
-    window.location.href = resumeUrl;
+      window.location.href = "resume.html";
     }
-    
+
+    fetch("resume-data.json")
+      .then(r => r.json())
+      .then(data => {
+        profile = data.profile || {};
+        const addr = profile.address || {};
+
+        // Basic info
+        document.getElementById("name").textContent = profile.name;
+        document.getElementById("title").textContent = profile.title;
+        document.getElementById("company").textContent = profile.company;
+        document.getElementById("headshot").src = profile.images?.headshot || "";
+        document.getElementById("companyLogo").src = profile.images?.logo || "";
+
+        // Email
+        const emailEl = document.getElementById("email");
+        if (profile.email) {
+          emailEl.href = `mailto:${profile.email}`;
+          emailEl.innerHTML = `
+            <img src="email.svg" class="item-icon" alt="Email">
+            <span class="item-text">${profile.email}</span>
+          `;
+        } else {
+          emailEl.remove();
+        }
+
+        // Phone
+        const phoneEl = document.getElementById("phone");
+        if (profile.phone) {
+          phoneEl.href = `tel:${profile.phone}`;
+          phoneEl.innerHTML = `
+            <img src="phone.svg" class="item-icon" alt="Phone">
+            <span class="item-text">${formatPhone(profile.phone)}</span>
+          `;
+        } else {
+          phoneEl.remove();
+        }
+
+        // Website
+        const websiteEl = document.getElementById("website");
+        if (profile.website) {
+          websiteEl.href = profile.website;
+          websiteEl.innerHTML = `
+            <img src="website.svg" class="item-icon" alt="Website">
+            <span class="item-text">${profile.website.replace(/^https?:\/\//, "")}</span>
+          `;
+        } else {
+          websiteEl.remove();
+        }
+
+        // Address
+        const addressEl = document.getElementById("address");
+        const cityLine = [
+          addr.city && `${addr.city}${addr.state ? "," : ""}`,
+          addr.state,
+          addr.zip,
+          addr.country
+        ].filter(Boolean).join(" ");
+
+        const isRemote = addr.line1?.trim().toLowerCase() === "remote";
+
+        if (isRemote && cityLine) {
+          addressEl.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cityLine)}`;
+          addressEl.target = "_blank";
+          addressEl.rel = "noopener";
+          addressEl.innerHTML = `
+            <img src="address.svg" class="item-icon" alt="Address">
+            <span class="item-text">Remote \u2014 ${cityLine}</span>
+          `;
+        } else {
+          const line1 = [addr.line1, addr.line2].filter(Boolean).join(" ");
+          if (line1 || cityLine) {
+            const fullAddress = [line1, cityLine].filter(Boolean).join(", ");
+            addressEl.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+            addressEl.target = "_blank";
+            addressEl.rel = "noopener";
+            addressEl.innerHTML = `
+              <img src="address.svg" class="item-icon" alt="Address">
+              <span class="item-text">
+                ${line1 ? `<div>${line1}</div>` : ""}
+                ${cityLine ? `<div>${cityLine}</div>` : ""}
+              </span>
+            `;
+          } else {
+            addressEl.remove();
+          }
+        }
+
+        if (!document.querySelector(".section .item")) {
+          document.querySelector(".section")?.remove();
+        }
+
+        // Calendar
+        const calendarBtn = document.getElementById("calendarBtn");
+        if (profile.calendarUrl) {
+          calendarBtn.addEventListener("click", () => {
+            window.open(profile.calendarUrl, "_blank", "noopener");
+          });
+        } else {
+          calendarBtn.remove();
+        }
+
+        // Socials
+        const socialsWrapper = document.querySelector(".socials-wrapper");
+        document.querySelectorAll(".social-icons a").forEach(icon => {
+          const key = icon.id.replace("social-", "");
+          const url = profile.socials?.[key];
+          if (url) {
+            icon.href = url;
+            icon.target = "_blank";
+            icon.rel = "noopener";
+          } else {
+            icon.remove();
+          }
+        });
+
+        if (!document.querySelector(".social-icons a")) {
+          socialsWrapper?.remove();
+        }
+
+        // QR code
+        document.getElementById("qrImage").src =
+          `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(profile.shareUrl || location.href)}`;
+
+        // Trigger staggered entrance animations
+        document.querySelector(".card").classList.add("loaded");
+
+        // Desktop-only enhancements
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+          const cardEl = document.querySelector(".card");
+
+          cardEl.addEventListener("mousemove", e => {
+            const rect = cardEl.getBoundingClientRect();
+            const relX = e.clientX - rect.left;
+            const relY = e.clientY - rect.top;
+            const x = relX / rect.width  - 0.5;
+            const y = relY / rect.height - 0.5;
+
+            // Cursor spotlight
+            cardEl.style.setProperty("--mouse-x", relX + "px");
+            cardEl.style.setProperty("--mouse-y", relY + "px");
+
+            // 3D tilt
+            cardEl.style.transform =
+              `perspective(900px) rotateY(${x * 5}deg) rotateX(${-y * 5}deg) translateY(-3px)`;
+          });
+
+          cardEl.addEventListener("mouseleave", () => {
+            cardEl.style.setProperty("--mouse-x", "-9999px");
+            cardEl.style.setProperty("--mouse-y", "-9999px");
+            cardEl.style.transition = "transform 0.5s ease";
+            cardEl.style.transform = "";
+            setTimeout(() => { cardEl.style.transition = ""; }, 500);
+          });
+        }
+      })
+      .catch(() => {
+        document.body.insertAdjacentHTML(
+          "beforeend",
+          '<p style="text-align:center;padding:1rem;color:red">Unable to load profile data.</p>'
+        );
+      });
   </script>
 </body>
 </html>

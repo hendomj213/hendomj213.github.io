@@ -1,96 +1,204 @@
 {
   "profile": {
     "name": "Mason Henderson",
-    "photo": "headshot-ai.png",
-    "location": "Pueblo, Colorado 81005",
-    "phone": "719-214-7729",
-    "email": "hendomj213@gmail.com"
+    "title": "Director of Data & Financial Operations",
+    "company": "Snooze Mattress + Wellness",
+    "phone": "+17192147729",
+    "email": "mhenderson@snoozesleep.com",
+    "personalEmail": "hendomj213@gmail.com",
+    "website": "https://snoozemattresscompany.com",
+    "location": "Amarillo, TX 79106",
+    "address": {
+      "line1": "Remote",
+      "line2": "",
+      "city": "Amarillo",
+      "state": "TX",
+      "zip": "79106",
+      "country": ""
+    },
+    "calendarUrl": "https://calendar.google.com/appointments/schedules/AcZssZ1Sy1NJqDkSxb78sHIjUj8vk8qJQCKeXpL73XVyg60FHlyQdCgXPvlsYaVt1ogdII6ol3OC0521",
+    "shareUrl": "https://hendomj213.github.io/",
+    "images": {
+      "headshot": "headshot-ai.png",
+      "logo": "snooze-logo.png"
+    },
+    "socials": {
+      "linkedin": "https://linkedin.com/in/mason-j-henderson",
+      "facebook": "https://facebook.com/profile.php?id=61551319502785",
+      "instagram": "https://instagram.com/hendomj213/",
+      "whatsapp": "https://wa.me/17192147729",
+      "snapchat": "https://snapchat.com/add/mason_damaster",
+      "letterboxd": "https://letterboxd.com/Mason_Henderson/"
+    }
   },
+  "summary": "Data and financial operations professional specializing in financial modeling, operational analytics, and business intelligence systems. Experienced in designing scalable reporting platforms, forecasting business performance, and delivering data-driven insights for multi-location organizations. Strong technical background in SQL, Python, and data automation combined with expertise in financial analysis and operational strategy.",
   "education": [
     {
       "logo": "csup-logo.svg",
       "logoAlt": "Colorado State University Pueblo logo",
-      "title": "Bachelor of Science",
+      "title": "Bachelor of Science — Hasan School of Business",
       "organization": "Colorado State University - Pueblo",
-      "dates": "Expected Graduation May 2024",
+      "dates": "August 2020 – May 2024",
       "details": [
-        "Majors: Marketing and Finance",
-        "3.96 GPA, Dean's List Fall 2020-Spring 2023",
-        "Relevant Coursework: Marketing Research, Social Media and E-Marketing, Advanced Business Statistics",
-        "Participated in Study Abroad (Summer 2023) to Harlaxton, England studying marketing concepts"
+        "3.97 GPA, Summa Cum Laude",
+        "Double Major: Marketing and Economics with a Finance Emphasis",
+        "Relevant Coursework: Adv. Business Statistics, Entrepreneurial Finance, Money & Banking, Investment Analysis"
       ]
     }
   ],
   "skills": [
-    "Talented with Microsoft Word, PowerPoint, and Excel",
-    "Skillful in public speaking and presentation",
-    "Outstanding problem-solving skills",
-    "Excels in individual and team settings",
-    "Analytical critical thinking skills",
-    "Conflict resolution and leadership techniques",
-    "Shopify store management",
-    "Social media content creation and management",
-    "Google Ads certified"
+    {
+      "category": "Data & Analytics",
+      "items": [
+        "Financial Modeling",
+        "Forecasting & Scenario Analysis",
+        "Business Intelligence Reporting",
+        "KPI / Scorecard Development"
+      ]
+    },
+    {
+      "category": "Tools & Technologies",
+      "items": [
+        "Excel (Advanced Modeling)",
+        "SQL",
+        "Python",
+        "JavaScript",
+        "Google Sheets Automation & Apps Script"
+      ]
+    },
+    {
+      "category": "Systems & Platforms",
+      "items": [
+        "QuickBooks Online",
+        "Bill.com",
+        "GoHighLevel",
+        "Retail POS Systems",
+        "Shopify"
+      ]
+    },
+    {
+      "category": "Additional Skills",
+      "items": [
+        "Use and Integration of External APIs",
+        "Dashboard Development",
+        "Financial Reporting",
+        "Cross-Functional Project Management"
+      ]
+    }
   ],
   "experience": [
     {
       "logo": "snooze-logo.png",
       "logoAlt": "Snooze Mattress + Wellness logo",
-      "title": "Marketing Specialist",
-      "organization": "Wake Up! Pueblo / Snooze Mattress Company",
-      "dates": "May 2023 - Present",
-      "details": [
-        "Created engaging and unique (static) social media content and managed multiple social accounts.",
-        "Developed and adhered to unique brand imagery/guidelines to create promotional materials.",
-        "Built and managed an online Shopify store with shopping integrations and product pages.",
-        "Evaluated website performance and implemented SEO techniques to increase traffic and conversions.",
-        "Managed social media accounts, increasing followers and user engagement through strategic content planning.",
-        "Prepared regular performance reports for clients to showcase campaign results and optimization areas.",
-        "Developed email campaigns for promotions, product releases, and updates.",
-        "Created comprehensive marketing strategies aligned with business goals.",
-        "Developed and optimized Google Ads and social media advertising campaigns."
+      "organization": "Snooze Mattress + Wellness",
+      "dates": "May 2023 – Present",
+      "companyDetails": [
+        "Reported directly to the Chief Retail Officer as well as the Chief Financial Officer, supporting strategic decision-making through operational analytics and reporting initiatives.",
+        "Collaborated with multiple teams including C-Suite Leadership, Finance, Marketing & Advertising, In-Store Success Teams, and directly with multiple franchisee groups across different regional markets."
+      ],
+      "roles": [
+        {
+          "title": "Director of Data & Financial Operations",
+          "type": "Remote",
+          "dates": "September 2025 – Present",
+          "details": [
+            "Develop enterprise-level financial models, forecasts, and performance projections supporting leadership decision-making across 36 international franchise locations.",
+            "Design and maintain financial & operational reporting used by executive leadership and stakeholders.",
+            "Built internal tools and reporting platforms used by franchisees, sales teams, and corporate success coaches.",
+            "Monitor and analyze royalty, revenue, and operational performance data across the franchise network.",
+            "Support franchisees with financial analysis, accounting workflows, and operational data interpretation.",
+            "Coordinate cross-functional projects involving finance, operations, and technology teams.",
+            "Created specialized presentations and pitch decks focused on selling large-scale franchise territories and garnering interest in direct investment into enterprise growth.",
+            "Partnered with senior leadership to integrate core internal systems, enhancing cross-team transparency and enabling faster delivery of real-time operational insights."
+          ]
+        },
+        {
+          "title": "Financial Analyst & Data Specialist",
+          "type": "Remote",
+          "dates": "April 2024 – September 2025",
+          "details": [
+            "Developed financial models and forecasting tools to support enterprise and franchise performance analysis.",
+            "Produced financial and operational reports used by leadership to evaluate business performance.",
+            "Maintained data systems supporting royalty tracking and location-level reporting.",
+            "Assisted in development of dashboards and automated reporting tools.",
+            "Analyzed location-level financial data to identify trends and performance improvement opportunities.",
+            "Built API-driven internal tools that automated key operational processes, reducing manual workload and cutting process times by 90% across business workflows."
+          ]
+        },
+        {
+          "title": "Marketing Specialist",
+          "type": "On-Location",
+          "dates": "May 2023 – April 2024",
+          "details": [
+            "Analyzed marketing spend and performance to identify inefficiencies and improve resource allocation.",
+            "Developed live reporting dashboards using Google Sheets to monitor marketing performance and ROI.",
+            "Delivered recurring performance reports identifying optimization opportunities.",
+            "Designed and implemented a proprietary system for managing in-store retail digital display content at scale.",
+            "Utilized quantitative analysis to guide marketing strategy and campaign planning."
+          ]
+        }
       ]
     },
     {
       "logo": "csup-logo.svg",
       "logoAlt": "Colorado State University Pueblo logo",
-      "title": "Hasan School of Business Tutor",
       "organization": "Colorado State University - Pueblo",
-      "dates": "Jan 2023 - May 2023",
-      "details": [
-        "Tutored students in basic and advanced statistics, principles of finance, and basic Java code.",
-        "Collaborated with students to complete assignments, identify lagging skills, and correct weaknesses.",
-        "Developed student confidence through positive reinforcement strategies.",
-        "Assisted students in reaching targeted performance levels through individualized coaching."
-      ]
-    },
-    {
-      "logo": "dq-logo.svg",
-      "logoAlt": "Dairy Queen Grill & Chill logo",
-      "title": "Shift Supervisor",
-      "organization": "Dairy Queen Grill & Chill",
-      "dates": "Jul 2020 - May 2022",
-      "details": [
-        "Managed shift operations and monitored team performance to keep business running smoothly.",
-        "Delivered successful training to more than 15 employees, educating on successful work processes and productivity strategies.",
-        "Developed and implemented new processes and procedures to streamline operations."
+      "dates": "January 2023 – April 2024",
+      "roles": [
+        {
+          "title": "Hasan School of Business Tutor",
+          "type": "Hybrid",
+          "dates": "January 2023 – April 2024",
+          "details": [
+            "Tutored students in: Basic/Advanced Statistics, Principals of Finance, and Basic/Advanced Java Coding.",
+            "Assisted students with analytical problem-solving and technical coursework."
+          ]
+        }
       ]
     }
   ],
   "awards": [
     {
-      "logo": "award-logo.svg",
-      "logoAlt": "Award icon",
-      "title": "Dean's List",
-      "subtitle": "Colorado State University - Pueblo",
-      "year": "2020-2023"
+      "logo": "snooze-logo.png",
+      "logoAlt": "Snooze Mattress + Wellness logo",
+      "title": "Corporate Employee of the Year",
+      "subtitle": "Snooze Mattress + Wellness",
+      "year": "2025"
     },
     {
-      "logo": "award-logo.svg",
-      "logoAlt": "Award icon",
-      "title": "Google Ads Certified",
-      "subtitle": "Google Skillshop",
-      "year": "Current"
+      "logo": "snooze-logo.png",
+      "logoAlt": "Snooze Mattress + Wellness logo",
+      "title": "Corporate Employee of the Year",
+      "subtitle": "Snooze Mattress + Wellness",
+      "year": "2024"
+    },
+    {
+      "logo": "csup-logo.svg",
+      "logoAlt": "Colorado State University Pueblo logo",
+      "title": "Dean's List",
+      "subtitle": "Colorado State University - Pueblo",
+      "year": "2023–2024 Academic Year"
+    },
+    {
+      "logo": "csup-logo.svg",
+      "logoAlt": "Colorado State University Pueblo logo",
+      "title": "Dean's List",
+      "subtitle": "Colorado State University - Pueblo",
+      "year": "2022–2023 Academic Year"
+    },
+    {
+      "logo": "csup-logo.svg",
+      "logoAlt": "Colorado State University Pueblo logo",
+      "title": "Dean's List",
+      "subtitle": "Colorado State University - Pueblo",
+      "year": "2021–2022 Academic Year"
+    },
+    {
+      "logo": "csup-logo.svg",
+      "logoAlt": "Colorado State University Pueblo logo",
+      "title": "Dean's List",
+      "subtitle": "Colorado State University - Pueblo",
+      "year": "2020–2021 Academic Year"
     }
   ]
 }

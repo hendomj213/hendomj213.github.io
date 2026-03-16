@@ -10,10 +10,27 @@
   <div class="card resume-card">
     <a class="back-link" href="index.html" aria-label="Back to contact card">← Back to Contact Card</a>
 
+    <div id="resumeSpinner" class="resume-spinner" aria-label="Loading resume..."></div>
+
     <div class="resume-identity">
-      <h1 id="resumeName" class="resume-name"></h1>
+      <div class="resume-name-row">
+        <h1 id="resumeName" class="resume-name"></h1>
+        <a id="resumeLinkedIn" class="resume-linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+          <img src="linkedin.svg" alt="LinkedIn">
+        </a>
+      </div>
       <p id="resumeContact" class="resume-contact"></p>
     </div>
+
+    <section class="resume-section" id="summarySection">
+      <h2>Professional Summary</h2>
+      <p id="summaryText" class="resume-summary"></p>
+    </section>
+
+    <section class="resume-section" id="experienceSection">
+      <h2>Work Experience</h2>
+      <div id="experienceList"></div>
+    </section>
 
     <section class="resume-section" id="educationSection">
       <h2>Education</h2>
@@ -21,13 +38,8 @@
     </section>
 
     <section class="resume-section" id="skillsSection">
-      <h2>Skills &amp; Abilities</h2>
-      <ul id="skillsList" class="skills-grid"></ul>
-    </section>
-
-    <section class="resume-section" id="experienceSection">
-      <h2>Work Experience</h2>
-      <div id="experienceList"></div>
+      <h2>Technical Skills</h2>
+      <div id="skillsList"></div>
     </section>
 
     <section class="resume-section" id="awardsSection">
@@ -37,6 +49,9 @@
   </div>
 
   <script>
+    // Enable scroll-reveal animations (only when JS is running)
+    document.documentElement.classList.add("js-animate");
+
     const escapeHtml = (value = "") =>
       value
         .replaceAll("&", "&amp;")
@@ -45,9 +60,17 @@
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#39;");
 
-    const buildJobCard = entry => {
+    const formatPhone = phone => {
+      const digits = phone.replace(/\D/g, "");
+      const country = digits.length === 11 ? digits[0] : "1";
+      const offset = digits.length === 11 ? 1 : 0;
+      return `+${country} (${digits.slice(offset, offset + 3)}) ${digits.slice(offset + 3, offset + 6)}-${digits.slice(offset + 6, offset + 10)}`;
+    };
+
+    // Simple card: education or any entry without sub-roles
+    const buildSimpleJobCard = entry => {
       const detailsMarkup = (entry.details || [])
-        .map(detail => `<li>${escapeHtml(detail)}</li>`)
+        .map(d => `<li>${escapeHtml(d)}</li>`)
         .join("");
 
       return `
@@ -66,6 +89,55 @@
       `;
     };
 
+    // Grouped company card: one company with multiple sub-roles
+    const buildCompanyCard = entry => {
+      const companyDetailsMarkup = (entry.companyDetails || [])
+        .map(d => `<li>${escapeHtml(d)}</li>`)
+        .join("");
+
+      const rolesMarkup = (entry.roles || []).map(role => {
+        const roleDetailsMarkup = (role.details || [])
+          .map(d => `<li>${escapeHtml(d)}</li>`)
+          .join("");
+        const typeDates = [role.type, role.dates].filter(Boolean).join(" \u00b7 ");
+
+        return `
+          <details class="job-role">
+            <summary>
+              <div class="job-meta">
+                <p class="job-title">${escapeHtml(role.title || "")}</p>
+                <p class="job-dates">${escapeHtml(typeDates)}</p>
+              </div>
+              <span class="job-arrow" aria-hidden="true"></span>
+            </summary>
+            <ul>${roleDetailsMarkup}</ul>
+          </details>
+        `;
+      }).join("");
+
+      const roleCount = entry.roles.length;
+      const roleLabel = roleCount === 1 ? "1 position" : `${roleCount} positions`;
+
+      return `
+        <details class="job-card">
+          <summary>
+            <img src="${escapeHtml(entry.logo || "")}" alt="${escapeHtml(entry.logoAlt || "Organization logo")}" class="job-logo" />
+            <div class="job-meta">
+              <p class="job-company">${escapeHtml(entry.organization || "")}</p>
+              <p class="job-dates">${escapeHtml(entry.dates || "")}</p>
+            </div>
+            <span class="role-count">${escapeHtml(roleLabel)}</span>
+            <span class="job-arrow" aria-hidden="true"></span>
+          </summary>
+          ${companyDetailsMarkup ? `<ul>${companyDetailsMarkup}</ul>` : ""}
+          <div class="job-roles">${rolesMarkup}</div>
+        </details>
+      `;
+    };
+
+    const buildJobCard = entry =>
+      entry.roles ? buildCompanyCard(entry) : buildSimpleJobCard(entry);
+
     const buildAwardCard = entry => `
       <article class="award-card">
         <img src="${escapeHtml(entry.logo || "")}" alt="${escapeHtml(entry.logoAlt || "Award logo")}" class="job-logo" />
@@ -77,50 +149,95 @@
       </article>
     `;
 
+    // Skills: supports either a flat string[] or a categorized {category, items[]}[]
+    const buildSkills = skills => {
+      if (!skills || !skills.length) return "";
+
+      if (skills[0] && typeof skills[0] === "object" && skills[0].category) {
+        const cats = skills.map(cat => `
+          <div class="skills-category">
+            <p class="skills-category-title">${escapeHtml(cat.category)}</p>
+            <ul>${(cat.items || []).map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>
+          </div>
+        `).join("");
+        return `<div class="skills-categories">${cats}</div>`;
+      }
+
+      return `<ul class="skills-grid">${skills.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>`;
+    };
+
     fetch("resume-data.json")
       .then(response => response.json())
       .then(data => {
         const profile = data.profile || {};
 
         document.getElementById("resumeName").textContent = profile.name || "";
+
+        const linkedInEl = document.getElementById("resumeLinkedIn");
+        if (profile.socials?.linkedin) {
+          linkedInEl.href = profile.socials.linkedin;
+        } else {
+          linkedInEl.remove();
+        }
+
         document.getElementById("resumeContact").textContent = [
           profile.location,
-          profile.phone,
-          profile.email
+          profile.phone ? formatPhone(profile.phone) : null,
+          profile.personalEmail || profile.email
         ].filter(Boolean).join(" | ");
 
-        const educationList = document.getElementById("educationList");
-        educationList.innerHTML = (data.education || [])
+        if (data.summary) {
+          document.getElementById("summaryText").textContent = data.summary;
+        } else {
+          document.getElementById("summarySection")?.remove();
+        }
+
+        document.getElementById("educationList").innerHTML = (data.education || [])
           .map(buildJobCard)
           .join("");
 
-        const skillsList = document.getElementById("skillsList");
-        skillsList.innerHTML = (data.skills || [])
-          .map(skill => `<li>${escapeHtml(skill)}</li>`)
-          .join("");
+        document.getElementById("skillsList").innerHTML = buildSkills(data.skills);
 
-        const experienceList = document.getElementById("experienceList");
-        experienceList.innerHTML = (data.experience || [])
+        document.getElementById("experienceList").innerHTML = (data.experience || [])
           .map(buildJobCard)
           .join("");
 
-        const awardsList = document.getElementById("awardsList");
-        awardsList.innerHTML = (data.awards || [])
+        document.getElementById("awardsList").innerHTML = (data.awards || [])
           .map(buildAwardCard)
           .join("");
 
         [
           ["educationSection", data.education],
-          ["skillsSection", data.skills],
+          ["skillsSection",   data.skills],
           ["experienceSection", data.experience],
-          ["awardsSection", data.awards]
+          ["awardsSection",   data.awards]
         ].forEach(([id, list]) => {
           if (!Array.isArray(list) || !list.length) {
             document.getElementById(id)?.remove();
           }
         });
+
+        // Remove spinner and reveal content
+        document.getElementById("resumeSpinner")?.remove();
+        document.querySelector(".resume-identity").classList.add("visible");
+
+        // Scroll-triggered reveals for each section
+        const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.08 });
+
+        document.querySelectorAll(".resume-section").forEach((section, i) => {
+          section.style.transitionDelay = `${i * 0.07}s`;
+          observer.observe(section);
+        });
       })
       .catch(() => {
+        document.getElementById("resumeSpinner")?.remove();
         document.body.insertAdjacentHTML(
           "beforeend",
           '<p class="resume-load-error">Unable to load resume data file.</p>'
