@@ -8,48 +8,17 @@
 </head>
 <body>
 
-<!-- ── Gate ─────────────────────────────────────────── -->
-<div id="gate">
-  <div class="gate-card">
-    <div class="gate-icon">🔒</div>
-    <h2>Admin Panel</h2>
-    <p class="gate-hint" id="gateHint">Enter your password to unlock the editor.</p>
-    <input id="pwInput" class="field-input" type="password" placeholder="Password" autocomplete="off">
-    <div id="patFieldWrap" style="display:none;margin-top:8px">
-      <p class="gate-hint" style="margin:0 0 8px">First-time setup: also enter your GitHub PAT (<code>repo</code> scope).</p>
-      <input id="patField" class="field-input" type="password" placeholder="ghp_…" autocomplete="off">
-    </div>
-    <div id="gateError" class="error-text"></div>
-    <button class="btn-primary" onclick="unlock()">Unlock Editor</button>
-    <div style="margin-top:14px">
-      <button class="btn-icon" style="font-size:0.78rem;color:var(--text-muted)" onclick="resetSetup()">Reset / change PAT</button>
-    </div>
-  </div>
-</div>
-
 <!-- ── Top Bar ──────────────────────────────────────── -->
-<div id="topBar" style="display:none">
+<div id="topBar">
   <div><span class="topbar-title">🔧 Admin Panel</span></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center">
-    <button class="btn-secondary" onclick="togglePatPopover()" title="Update PAT">🔑</button>
     <a class="btn-secondary" href="index.html" target="_blank" rel="noopener">View Site ↗</a>
-    <button id="btnSave" class="btn-primary" onclick="saveAll()">Save All</button>
+    <button id="btnSave" class="btn-primary" onclick="saveAll()">Download JSON</button>
   </div>
-</div>
-
-<!-- ── PAT Update Popover ────────────────────────────── -->
-<div id="patPopover" style="display:none;position:fixed;top:56px;right:16px;z-index:50;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:18px;width:min(90vw,320px);box-shadow:0 8px 32px rgba(0,0,0,0.5)">
-  <p style="margin:0 0 10px;font-size:0.85rem;color:var(--text-muted)">Enter a new GitHub PAT to replace the stored one:</p>
-  <input id="newPatInput" class="field-input" type="password" placeholder="ghp_…" autocomplete="off">
-  <div style="display:flex;gap:8px;margin-top:10px">
-    <button class="btn-primary" style="flex:1" onclick="saveNewPat()">Save PAT</button>
-    <button class="btn-secondary" onclick="togglePatPopover()">Cancel</button>
-  </div>
-  <div id="patPopoverMsg" style="font-size:0.8rem;margin-top:8px;min-height:1.2em"></div>
 </div>
 
 <!-- ── Layout ───────────────────────────────────────── -->
-<div id="layout" style="display:none">
+<div id="layout">
   <nav id="sidebar">
     <div class="nav-item active"  data-section="profile"    onclick="setSection('profile')">Profile</div>
     <div class="nav-item"         data-section="summary"    onclick="setSection('summary')">Summary</div>
@@ -62,18 +31,11 @@
 </div>
 
 <!-- ── Toast ────────────────────────────────────────── -->
-<div id="toast" style="display:none" onclick="hideToast()"></div>
+<div id="toast" style="display:none"></div>
 
 <script>
-// ── Constants ────────────────────────────────────────
-const REPO_OWNER = "hendomj213";
-const REPO_NAME  = "hendomj213.github.io";
-const BRANCH     = "main";
-
 // ── State ────────────────────────────────────────────
 let state  = {};
-let shas   = { json: null, vcf: null };
-let pat    = "";
 let dirty  = false;
 let active = "profile";
 
@@ -85,19 +47,10 @@ const escHtml = s => String(s ?? "")
 
 const escAttr = escHtml;
 
-const toB64 = str => btoa(unescape(encodeURIComponent(str)));
-
 function arrayMove(arr, i, dir) {
   const j = i + dir;
   if (j < 0 || j >= arr.length) return;
   [arr[i], arr[j]] = [arr[j], arr[i]];
-}
-
-// ── XOR encode/decode (symmetric) ────────────────────
-function xorStr(str, key) {
-  return [...str].map((c, i) =>
-    String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))
-  ).join("");
 }
 
 // ── Toast ────────────────────────────────────────────
@@ -109,186 +62,7 @@ function showToast(msg, type, persist) {
   el.className = `toast-${type}`;
   el.style.display = "block";
   clearTimeout(toastTimer);
-  if (!persist) toastTimer = setTimeout(hideToast, 4000);
-}
-
-function hideToast() {
-  document.getElementById("toast").style.display = "none";
-}
-
-// ── GitHub API ───────────────────────────────────────
-async function ghGet(path) {
-  const res = await fetch(
-    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`,
-    { headers: { Authorization: `token ${pat}`, Accept: "application/vnd.github.v3+json" } }
-  );
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw Object.assign(new Error(body.message || res.statusText), { status: res.status });
-  }
-  return res.json();
-}
-
-async function ghPut(path, content, sha, message) {
-  const res = await fetch(
-    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `token ${pat}`,
-        Accept: "application/vnd.github.v3+json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ message, content: toB64(content), sha, branch: BRANCH })
-    }
-  );
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw Object.assign(new Error(body.message || res.statusText), { status: res.status });
-  }
-  return res.json();
-}
-
-// ── VCF Builder ──────────────────────────────────────
-function buildVcf(p) {
-  const addr  = p.address || {};
-  const parts = (p.name || "").trim().split(/\s+/);
-  const first = parts[0] || "";
-  const last  = parts.slice(1).join(" ");
-  return [
-    "BEGIN:VCARD",
-    "VERSION:3.0",
-    `N:${last};${first};;;`,
-    `FN:${p.name || ""}`,
-    p.company ? `ORG:${p.company}` : null,
-    p.title   ? `TITLE:${p.title}` : null,
-    p.phone   ? `TEL;TYPE=CELL:${p.phone}` : null,
-    p.email   ? `EMAIL;TYPE=WORK:${p.email}` : null,
-    p.website ? `URL:${p.website}` : null,
-    `ADR;TYPE=WORK:;;${addr.line1||""};${addr.city||""};${addr.state||""};${addr.zip||""};${addr.country||""}`,
-    "END:VCARD"
-  ].filter(Boolean).join("\r\n") + "\r\n";
-}
-
-// ── Gate / Unlock ────────────────────────────────────
-function showGateError(msg) {
-  document.getElementById("gateError").textContent = msg;
-}
-
-function togglePatPopover() {
-  const el = document.getElementById("patPopover");
-  const open = el.style.display !== "none";
-  el.style.display = open ? "none" : "";
-  if (!open) {
-    document.getElementById("newPatInput").value = "";
-    document.getElementById("patPopoverMsg").textContent = "";
-    document.getElementById("newPatInput").focus();
-  }
-}
-
-async function saveNewPat() {
-  const newPat = document.getElementById("newPatInput").value.trim();
-  const msg    = document.getElementById("patPopoverMsg");
-  if (!newPat) { msg.style.color = "#f87171"; msg.textContent = "Please enter a PAT."; return; }
-
-  msg.style.color = "var(--text-muted)";
-  msg.textContent = "Verifying…";
-
-  const savedPat = pat;
-  pat = newPat;
-  try {
-    await ghGet("resume-data.json");
-  } catch (err) {
-    pat = savedPat;
-    msg.style.color = "#f87171";
-    msg.textContent = err.status === 401
-      ? "Invalid PAT — check permissions."
-      : "Error: " + err.message;
-    return;
-  }
-
-  const pw = sessionStorage.getItem("admin_pw");
-  if (pw) localStorage.setItem("admin_enc", btoa(xorStr(newPat, pw)));
-  sessionStorage.setItem("admin_pat", newPat);
-
-  msg.style.color = "#4ade80";
-  msg.textContent = "PAT updated successfully.";
-  setTimeout(togglePatPopover, 1200);
-}
-
-function resetSetup() {
-  localStorage.removeItem("admin_enc");
-  document.getElementById("patFieldWrap").style.display = "";
-  document.getElementById("gateHint").textContent = "Enter your password to unlock the editor.";
-  showGateError("");
-}
-
-async function unlock() {
-  const pw = document.getElementById("pwInput").value;
-  if (!pw) { showGateError("Please enter your password."); return; }
-
-  const enc = localStorage.getItem("admin_enc");
-
-  if (enc) {
-    // Decode stored PAT using the password
-    const decoded = xorStr(atob(enc), pw);
-    if (!decoded.startsWith("ghp_") && !decoded.startsWith("github_pat_")) {
-      showGateError("Wrong password.");
-      return;
-    }
-    pat = decoded;
-  } else {
-    // First-time setup: need PAT too
-    const rawPat = document.getElementById("patField").value.trim();
-    if (!rawPat) { showGateError("Enter your GitHub PAT to complete first-time setup."); return; }
-    pat = rawPat;
-  }
-
-  showGateError("Verifying…");
-  try {
-    await ghGet("resume-data.json");
-  } catch (err) {
-    if (err.status === 401) {
-      if (!enc) {
-        showGateError("Invalid PAT — check permissions (repo scope required).");
-      } else {
-        localStorage.removeItem("admin_enc");
-        showGateError("PAT expired or revoked — click \"Reset / change PAT\" to re-enter it.");
-      }
-    } else {
-      showGateError("Error: " + err.message);
-    }
-    return;
-  }
-
-  // Save encoded PAT on first-time setup
-  if (!enc) {
-    localStorage.setItem("admin_enc", btoa(xorStr(pat, pw)));
-  }
-
-  sessionStorage.setItem("admin_pat", pat);
-  sessionStorage.setItem("admin_pw", pw);
-  showApp();
-  await loadData();
-}
-
-document.getElementById("pwInput").addEventListener("keydown", e => {
-  if (e.key === "Enter") unlock();
-});
-document.getElementById("patField").addEventListener("keydown", e => {
-  if (e.key === "Enter") unlock();
-});
-
-function showApp() {
-  document.getElementById("gate").style.display  = "none";
-  document.getElementById("topBar").style.display = "";
-  document.getElementById("layout").style.display = "";
-}
-
-function hideApp() {
-  document.getElementById("gate").style.display  = "";
-  document.getElementById("topBar").style.display = "none";
-  document.getElementById("layout").style.display = "none";
+  if (!persist) toastTimer = setTimeout(() => { el.style.display = "none"; }, 4000);
 }
 
 // ── Load Data ────────────────────────────────────────
@@ -296,16 +70,9 @@ async function loadData() {
   document.getElementById("mainContent").innerHTML =
     '<p style="padding:20px;color:var(--text-muted)">Loading data…</p>';
   try {
-    const [data, jsonMeta, vcfMeta] = await Promise.all([
-      fetch("resume-data.json").then(r => r.json()),
-      ghGet("resume-data.json"),
-      ghGet("mason_henderson.vcf")
-    ]);
-    state      = structuredClone(data);
-    shas.json  = jsonMeta.sha;
-    shas.vcf   = vcfMeta.sha;
-    dirty      = false;
-    // Ensure nested objects exist
+    const data = await fetch("resume-data.json").then(r => r.json());
+    state = structuredClone(data);
+    dirty = false;
     state.profile         = state.profile         || {};
     state.profile.address = state.profile.address || {};
     state.profile.socials = state.profile.socials || {};
@@ -316,39 +83,23 @@ async function loadData() {
     state.awards          = state.awards          || [];
     renderActive();
   } catch (err) {
-    if (err.status === 401) {
-      pat = "";
-      sessionStorage.removeItem("admin_pat");
-      hideApp();
-      showGateError("Session expired — please re-enter your PAT.");
-    } else {
-      document.getElementById("mainContent").innerHTML =
-        `<p style="padding:20px;color:#f87171">Failed to load data: ${escHtml(err.message)}</p>`;
-    }
+    document.getElementById("mainContent").innerHTML =
+      `<p style="padding:20px;color:#f87171">Failed to load resume-data.json: ${escHtml(err.message)}</p>`;
   }
 }
 
-// ── Save All ─────────────────────────────────────────
-async function saveAll() {
-  showToast("Saving… do not close tab", "saving", true);
-  document.getElementById("btnSave").disabled = true;
-  try {
-    const date = new Date().toISOString().slice(0, 10);
-    const [jsonRes, vcfRes] = await Promise.all([
-      ghPut("resume-data.json",    JSON.stringify(state, null, 2), shas.json, `Admin: update resume-data.json (${date})`),
-      ghPut("mason_henderson.vcf", buildVcf(state.profile || {}),  shas.vcf,  `Admin: update mason_henderson.vcf (${date})`)
-    ]);
-    shas.json = jsonRes.content.sha;
-    shas.vcf  = vcfRes.content.sha;
-    dirty     = false;
-    showToast("Saved! Site updates in ~30 seconds.", "success");
-  } catch (err) {
-    let msg = `Save failed: ${err.message}`;
-    if (err.status === 401) msg = "Authentication failed — check your GitHub PAT.";
-    if (err.status === 409) msg = "Conflict — reload to refresh file state, then re-save.";
-    showToast(msg, "error", true);
-  }
-  document.getElementById("btnSave").disabled = false;
+// ── Save (Download) ───────────────────────────────────
+function saveAll() {
+  const json = JSON.stringify(state, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = "resume-data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+  dirty = false;
+  showToast("Downloaded! Replace resume-data.json in your repo to go live.", "success");
 }
 
 // ── Navigation ───────────────────────────────────────
@@ -418,9 +169,9 @@ function renderProfile() {
       <div class="field-group">
         <p class="group-title">URLs</p>
         <div class="field-grid">
-          ${f("Calendar URL",      "state.profile.calendarUrl", p.calendarUrl, true)}
-          ${f("Share URL",         "state.profile.shareUrl",    p.shareUrl,    true)}
-          ${f("Location Display",  "state.profile.location",    p.location,    true)}
+          ${f("Calendar URL",     "state.profile.calendarUrl", p.calendarUrl, true)}
+          ${f("Share URL",        "state.profile.shareUrl",    p.shareUrl,    true)}
+          ${f("Location Display", "state.profile.location",    p.location,    true)}
         </div>
       </div>
 
@@ -735,17 +486,7 @@ window.addEventListener("beforeunload", e => {
 });
 
 // ── Init ─────────────────────────────────────────────
-(function init() {
-  const saved = sessionStorage.getItem("admin_pat");
-  if (saved) { pat = saved; showApp(); loadData(); return; }
-
-  // Show PAT field if no encrypted PAT is stored yet (first-time setup)
-  if (!localStorage.getItem("admin_enc")) {
-    document.getElementById("patFieldWrap").style.display = "";
-    document.getElementById("gateHint").textContent =
-      "First-time setup: enter your password and GitHub PAT. After this, just your password.";
-  }
-})();
+loadData();
 </script>
 </body>
 </html>
